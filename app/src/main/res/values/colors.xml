@@ -1,14 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- light page like the web app (#fafaf7), so the black strokes stay visible -->
+    <!-- light page like the web app (#fafaf7), so the black strokes stay visible; dark: values-night -->
     <color name="bg">#FFFAFAF7</color>
     <color name="text">#FF222222</color>
     <color name="dim">#FF666666</color>
+    <color name="dim2">#FF999999</color>
     <color name="card">#FFFFFFFF</color>
     <color name="line">#FFCCCCCC</color>
+    <color name="card_line">#FFDDDDDD</color>
+    <color name="alpha_line">#FFA5B4FC</color>
+    <color name="kana_line">#FFF9A8D4</color>
+    <color name="head_text">#FF555555</color>
+    <color name="ripple">#66F59E0B</color>
     <color name="accent">#FF1D4ED8</color>
     <color name="err">#FFBB0000</color>
     <color name="bar">#FF1B1E26</color>
+    <color name="bar_text">#FFF1EEE4</color>
+    <color name="bar_dim">#FF9AA0AE</color>
+    <!-- stroke colors 黒 赤 青 緑 (Kck.COLOR_ARGB; values-night: Kck.COLOR_ARGB_DARK, 黒 drawn light) -->
     <!-- launcher icon -->
-    <color name="icon_bg">#FF1B1E26</color>
+    <color name="icon_bg">#FF1E3348</color>
 </resources>

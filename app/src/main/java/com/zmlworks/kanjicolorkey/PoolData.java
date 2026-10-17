@@ -26,16 +26,23 @@ public final class PoolData {
     }
 
     public static PoolData read(InputStream in) throws IOException {
-        ByteArrayOutputStream bo = new ByteArrayOutputStream(1 << 22);
-        byte[] buf = new byte[1 << 16];
-        for (int n; (n = in.read(buf)) > 0; ) bo.write(buf, 0, n);
-        return parse(bo.toString(StandardCharsets.UTF_8.name()));
+        return parse(readAll(in));
     }
 
     static PoolData parse(String json) {
+        return new PoolData(readString(json, "kanji"), readStrokes(json));
+    }
+
+    /** The string value of a top-level key (the glyphs: "kanji" in pool.json, "kana" in kana.json). */
+    static String readString(String json, String key) {
         Reader r = new Reader(json);
-        r.at = keyPos(json, "kanji");
-        String kanji = r.string();
+        r.at = keyPos(json, key);
+        return r.string();
+    }
+
+    /** The "strokes" array: one array of SVG path strings per glyph, in stroke order. */
+    static String[][] readStrokes(String json) {
+        Reader r = new Reader(json);
         r.at = keyPos(json, "strokes");
         List<String[]> all = new ArrayList<>(4096);
         r.expect('[');
@@ -49,12 +56,19 @@ public final class PoolData {
             } while (r.comma());
         }
         r.expect(']');
-        return new PoolData(kanji, all.toArray(new String[0][]));
+        return all.toArray(new String[0][]);
+    }
+
+    static String readAll(InputStream in) throws IOException {
+        ByteArrayOutputStream bo = new ByteArrayOutputStream(1 << 16);
+        byte[] buf = new byte[1 << 16];
+        for (int n; (n = in.read(buf)) > 0; ) bo.write(buf, 0, n);
+        return bo.toString(StandardCharsets.UTF_8.name());
     }
 
     private static int keyPos(String json, String key) {
         int k = json.indexOf("\"" + key + "\"");
-        if (k < 0) throw new IllegalArgumentException("pool.json: no " + key);
+        if (k < 0) throw new IllegalArgumentException("json: no " + key);
         k = json.indexOf(':', k);
         return k + 1;
     }
@@ -64,7 +78,7 @@ public final class PoolData {
         Reader(String s) { this.s = s; }
         void ws() { while (at < s.length() && Character.isWhitespace(s.charAt(at))) at++; }
         boolean peekIs(char c) { ws(); return at < s.length() && s.charAt(at) == c; }
-        void expect(char c) { ws(); if (at >= s.length() || s.charAt(at) != c) throw new IllegalArgumentException("pool.json: expected " + c + " at " + at); at++; }
+        void expect(char c) { ws(); if (at >= s.length() || s.charAt(at) != c) throw new IllegalArgumentException("json: expected " + c + " at " + at); at++; }
         boolean comma() { ws(); if (at < s.length() && s.charAt(at) == ',') { at++; return true; } return false; }
         String string() {
             expect('"');

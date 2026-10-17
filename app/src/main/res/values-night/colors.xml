@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- dark mode, as the web app's dark theme -->
+    <color name="bg">#FF15171C</color>
+    <color name="text">#FFE8E6DF</color>
+    <color name="dim">#FFA3A7B0</color>
+    <color name="dim2">#FF7D828C</color>
+    <color name="card">#FF1F232B</color>
+    <color name="line">#FF3A3F4A</color>
+    <color name="card_line">#FF3A3F4A</color>
+    <color name="alpha_line">#FF6371C9</color>
+    <color name="kana_line">#FFB05583</color>
+    <color name="head_text">#FFB8BCC4</color>
+    <color name="ripple">#66F59E0B</color>
+    <color name="accent">#FF6C96FF</color>
+    <color name="err">#FFFF7B7B</color>
+    <color name="bar">#FF0E1015</color>
+</resources>

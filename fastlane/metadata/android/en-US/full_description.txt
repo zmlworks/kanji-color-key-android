@@ -1,18 +1,19 @@
 <p>Kanji Color Key (漢字色キー) turns a 256-bit random key – the kind used as the final secret of a password manager or disk encryption – into about 8 kanji whose strokes are written in four colors (black, red, blue, green), so you can copy it onto paper by hand. It decodes the paper back to the key, even when you are unsure of some strokes.</p>
-<p>This is the Android version of the offline web app <a href="https://zmlworks.github.io/kanji-color-key/">kanji-color-key</a> (v1.1.0 scheme). The encoder and decoder are a native Java port verified against the web app's JavaScript with thousands of shared test vectors, so both produce exactly the same text. The user interface is in Japanese, as in the web app.</p>
+<p>This is the Android version of the offline web app <a href="https://zmlworks.github.io/kanji-color-key/">kanji-color-key</a> (v1.2.0 scheme). The encoder and decoder are a native Java port verified against the web app's JavaScript with thousands of shared test vectors, so both produce exactly the same text. The user interface is in Japanese, as in the web app.</p>
 <p><b>How it works</b></p>
 <ul>
 <li>Each kanji comes from a fixed pool of 4096 (12 bits), and each stroke has one of 4 colors (2 bits per stroke).</li>
-<li>Alpha mode: 32 uppercase glyphs (no 0, 1, 8, U) × 4 colors = 7 bits per symbol. Tap any symbol to switch that position between kanji and glyph; the last part is offered both ways (end with a kanji / end with glyphs).</li>
-<li>Optional check bits (SHA-256), and v1.1 surplus bits: the unused strokes at the end get colors derived from the key, so they also act as a check. Old v1.0 (black-padded) notes still decode.</li>
-<li>Decoding accepts ? for an unknown color or glyph, (..) for a block of strokes at an unknown place and [..] for strokes in a possibly swapped order, and lists every matching candidate.</li>
+<li>Alphanumerics: 32 uppercase glyphs (no 0, 1, 8, U) × 4 colors = 7 bits. Kana: 32 hiragana and katakana, 5 bits + 2 bits per stroke. Each type can be switched on or off; tap a symbol to rotate that position kanji → alphanumeric → kana.</li>
+<li>All-kana is variable length; an optional fixed-length form (KF) uses 24 kana for 256 bits. The ending is offered as kanji, alphanumerics or one-color kana.</li>
+<li>Optional check bits (SHA-256) and surplus bits: unused strokes at the end get colors derived from the key, so they also act as a check. Notes made with v1.0 and v1.1 still decode.</li>
+<li>Decoding accepts ? for an unknown color or symbol, (..) for strokes at an unknown place and [..] for strokes in a possibly swapped order, and lists every matching candidate. If nothing matches, it also tries the hiragana/katakana lookalikes (お/オ, き/キ, け/ケ, さ/サ, ほ/ホ, も/モ).</li>
 <li>Keys: random (SecureRandom), hex, binary, or derived from a passphrase (PBKDF2-HMAC-SHA256, 600,000 iterations), 64 to 512 data bits.</li>
+<li>Dark mode: follows the system, or set light/dark in Settings.</li>
 </ul>
 <p><b>Privacy and security</b></p>
 <ul>
 <li>No permissions at all (no internet access), no analytics, no third-party libraries.</li>
-<li>Screenshots and the recent-apps thumbnail are blocked by default (can be allowed in Settings).</li>
-<li>Keys are never written to storage; the key and all inputs are cleared when the app goes to the background (can be switched off). Backups are disabled.</li>
-<li>Copied keys are marked sensitive and removed from the clipboard after 60 seconds.</li>
+<li>Keys are never written to storage, backups are disabled, and copied text is always marked sensitive.</li>
+<li>Optional (off by default): block screenshots and the recent-apps thumbnail, clear the key and inputs when the app goes to the background, keep the screen on, clear the clipboard after 60 seconds.</li>
 </ul>
-<p>Kanji stroke data: KanjiVG © Ulrich Apel, CC BY-SA 3.0. App code: MIT © zmlworks. The app and its repository are operated autonomously by the AI assistant Grok Bot under a human administrator.</p>
+<p>Kanji and kana stroke data: KanjiVG © Ulrich Apel, CC BY-SA 3.0. App code: MIT © zmlworks. Icon artwork supplied by the project owner. The app and its repository are operated autonomously by the AI assistant Grok Bot under a human administrator.</p>

@@ -20,7 +20,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/title"
-            android:textColor="#FFF1EEE4"
+            android:textColor="@color/bar_text"
             android:textSize="20sp"
             android:textStyle="bold" />
 
@@ -30,7 +30,7 @@
             android:layout_marginStart="8dp"
             android:layout_weight="1"
             android:text="@string/subtitle"
-            android:textColor="#FF9AA0AE"
+            android:textColor="@color/bar_dim"
             android:textSize="12sp" />
 
         <Button
@@ -40,7 +40,7 @@
             android:layout_height="wrap_content"
             android:text="@string/demo"
             android:textAllCaps="false"
-            android:textColor="#FFF1EEE4" />
+            android:textColor="@color/bar_text" />
 
         <Button
             android:id="@+id/bSettings"
@@ -49,7 +49,7 @@
             android:layout_height="wrap_content"
             android:text="@string/settings"
             android:textAllCaps="false"
-            android:textColor="#FFF1EEE4" />
+            android:textColor="@color/bar_text" />
     </LinearLayout>
 
     <ScrollView
@@ -237,6 +237,46 @@
 
                 <TextView style="@style/Legend" android:text="@string/sec_encode" />
 
+                <com.zmlworks.kanjicolorkey.FlowLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="48dp"
+                        android:gravity="center_vertical"
+                        android:text="@string/types_label"
+                        android:textColor="@color/text" />
+
+                    <CheckBox
+                        android:id="@+id/tKanji"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="true"
+                        android:enabled="false"
+                        android:text="@string/type_kanji" />
+
+                    <CheckBox
+                        android:id="@+id/tAlpha"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="true"
+                        android:text="@string/type_alpha" />
+
+                    <CheckBox
+                        android:id="@+id/tKana"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="true"
+                        android:text="@string/type_kana" />
+
+                    <CheckBox
+                        android:id="@+id/tFixed"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/type_fixed" />
+                </com.zmlworks.kanjicolorkey.FlowLayout>
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -255,9 +295,18 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="6dp"
                         android:text="@string/all_alpha" />
+
+                    <Button
+                        android:id="@+id/bAllKana"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:text="@string/all_kana" />
                 </LinearLayout>
 
-                <TextView style="@style/Small" android:text="@string/encode_hint" />
+                <TextView
+                    android:id="@+id/encHint"
+                    style="@style/Small" />
 
                 <TextView
                     android:id="@+id/info"
@@ -301,6 +350,12 @@
                     android:hint="@string/decode_placeholder"
                     android:inputType="textMultiLine|textNoSuggestions"
                     android:minLines="3" />
+
+                <CheckBox
+                    android:id="@+id/lookAlways"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/look_always" />
 
                 <Button
                     android:id="@+id/bDec"

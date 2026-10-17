@@ -7,17 +7,20 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.view.View;
 
-/** One kanji drawn from its KanjiVG strokes, each stroke in its color, with stroke numbers (as the web app's SVG). */
+/** One kanji or kana drawn from its KanjiVG strokes, each stroke in its color, with stroke numbers (as the web app's SVG).
+ * palette: Kck.COLOR_ARGB on light, Kck.COLOR_ARGB_DARK in dark mode (黒 drawn light). */
 @SuppressLint("ViewConstructor") // created from code only
 public class StrokeView extends View {
     private final String[] strokes;
     private final int[] colors;
+    private final int[] palette;
     private final Path[] paths;
     private final float[][] starts;
     private final Paint line = new Paint(Paint.ANTI_ALIAS_FLAG), num = new Paint(Paint.ANTI_ALIAS_FLAG);
 
-    public StrokeView(Context c, String[] strokes, int[] colors) {
+    public StrokeView(Context c, String[] strokes, int[] colors, int[] palette) {
         super(c);
+        this.palette = palette;
         this.strokes = strokes;
         this.colors = colors;
         paths = new Path[strokes.length];
@@ -31,13 +34,14 @@ public class StrokeView extends View {
     }
 
     public int strokeCount() { return strokes.length; }
+    public int strokeColor(int i) { return palette[i < colors.length ? colors[i] : 0]; }
 
     @Override protected void onDraw(Canvas canvas) {
         float k = Math.min(getWidth(), getHeight()) / 109f;
         canvas.save();
         canvas.scale(k, k);
         for (int i = 0; i < paths.length; i++) {
-            int c = Kck.COLOR_ARGB[i < colors.length ? colors[i] : 0];
+            int c = palette[i < colors.length ? colors[i] : 0];
             line.setColor(c);
             canvas.drawPath(paths[i], line);
             num.setColor(c);

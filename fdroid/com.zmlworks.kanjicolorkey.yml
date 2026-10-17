@@ -3,7 +3,7 @@
 Categories:
   - Security
 License: MIT
-# The bundled kanji stroke data (assets/pool.json) is CC-BY-SA-3.0 (KanjiVG); see THIRD_PARTY_NOTICES.md.
+# The bundled kanji and kana stroke data (assets/pool.json, assets/kana.json) is CC-BY-SA-3.0 (KanjiVG); see THIRD_PARTY_NOTICES.md.
 AuthorName: zmlworks
 SourceCode: https://github.com/zmlworks/kanji-color-key-android
 IssueTracker: https://github.com/zmlworks/kanji-color-key-android/issues
@@ -23,10 +23,17 @@ Builds:
     gradle:
       - yes
 
+  - versionName: 0.2.0
+    versionCode: 2
+    commit: v0.2.0
+    subdir: app
+    gradle:
+      - yes
+
 # reproducible build: F-Droid publishes the upstream-signed APK when its own build matches it
 AllowedAPKSigningKeys: 2ef7ff518ab0765447f4d2bd9cc48ce6021fec08fd476f1f7dab6fbb980868de
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
-CurrentVersion: 0.1.0
-CurrentVersionCode: 1
+CurrentVersion: 0.2.0
+CurrentVersionCode: 2

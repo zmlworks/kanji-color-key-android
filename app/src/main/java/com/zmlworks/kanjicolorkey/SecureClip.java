@@ -14,8 +14,8 @@ import java.security.MessageDigest;
 import java.util.Arrays;
 
 /**
- * Clipboard copies of key material: marked sensitive (hidden from the clipboard preview / keyboard suggestions on
- * Android 13+) and cleared after CLEAR_MS.
+ * Clipboard copies of key material: always marked sensitive (hidden from the clipboard preview / keyboard
+ * suggestions on Android 13+) and, when the setting is on (off by default since 0.2.0), cleared after CLEAR_MS.
  * Android 10+ lets only the focused app read the clipboard. When the timer fires while this app is in the
  * foreground, the clip is cleared only if it is still ours (compared by SHA-256). In the background it cannot
  * be read, so it is cleared anyway; this can also wipe something copied in another app within the 60 s.
@@ -30,7 +30,8 @@ public final class SecureClip {
     private static byte[] lastHash;
     private static Runnable pending;
 
-    public static void copy(Context ctx, String label, String text) {
+    /** clear: schedule the clear after CLEAR_MS (Settings.clipClear()). */
+    public static void copy(Context ctx, String label, String text, boolean clear) {
         Context app = ctx.getApplicationContext();
         ClipboardManager cm = app.getSystemService(ClipboardManager.class);
         ClipData clip = ClipData.newPlainText(label, text);
@@ -38,8 +39,11 @@ public final class SecureClip {
         extras.putBoolean(Build.VERSION.SDK_INT >= 33 ? ClipDescription.EXTRA_IS_SENSITIVE : EXTRA_IS_SENSITIVE, true);
         clip.getDescription().setExtras(extras);
         cm.setPrimaryClip(clip);
-        lastHash = hash(text);
         if (pending != null) H.removeCallbacks(pending);
+        pending = null;
+        lastHash = null;
+        if (!clear) return;
+        lastHash = hash(text);
         pending = () -> clearIfOurs(app);
         H.postDelayed(pending, CLEAR_MS);
     }

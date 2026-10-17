@@ -4,21 +4,27 @@
 The app code is MIT licensed, © 2026 zmlworks (see LICENSE in the source repository).
 The app has no third-party code libraries. Fonts are the phone's system fonts (none are bundled).
 
-1. Kanji stroke data — KanjiVG
-------------------------------
-assets/pool.json (stroke paths, stroke counts and stroke order of 4096 kanji) is derived from
+1. Kanji and kana stroke data — KanjiVG
+---------------------------------------
+assets/pool.json (stroke paths, stroke counts and stroke order of 4096 kanji) and assets/kana.json
+(the same for 32 kana: あおかきけさせたなにはふほまむもやを ウオキケサチツテネホミモヨヰ) are derived from
 KanjiVG (https://kanjivg.tagaini.net/) release r20260714, Copyright (C) Ulrich Apel,
 licensed under the Creative Commons Attribution-Share Alike 3.0 Unported license
 (CC BY-SA 3.0, https://creativecommons.org/licenses/by-sa/3.0/).
 
 Changes (made by the kanji-color-key project, https://github.com/zmlworks/kanji-color-key):
-4096 kanji were selected (JIS X 0208 level 1 and part of level 2), coordinates were rounded to 0.1,
-and metadata was removed. The file is byte-identical to data/pool.json of kanji-color-key v1.1.0.
+4096 kanji (JIS X 0208 level 1 and part of level 2) and 32 kana were selected, coordinates were
+rounded to 0.1, and metadata was removed. The files are byte-identical to data/pool.json and
+data/kana.json of kanji-color-key v1.2.0.
 
-pool.json, as a derivative of KanjiVG, is distributed under CC BY-SA 3.0 (not under the MIT license).
-The kanji drawn on screen are rendered from this data.
+pool.json and kana.json, as derivatives of KanjiVG, are distributed under CC BY-SA 3.0
+(not under the MIT license). The kanji and kana drawn on screen are rendered from this data.
 
-2. Encoding scheme
+2. Launcher icon
+----------------
+Icon artwork supplied by the project owner.
+
+3. Encoding scheme
 ------------------
-The encoding (kanji pool order, colors, check code and surplus bits) is that of kanji-color-key
-v1.1.0 by zmlworks (MIT), ported from JavaScript to Java.
+The encoding (kanji pool and kana order, colors, check code and surplus bits) is that of
+kanji-color-key v1.2.0 by zmlworks (MIT), ported from JavaScript to Java.
