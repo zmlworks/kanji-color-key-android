@@ -1,0 +1,18 @@
+<p>Kanji Color Key (漢字色キー) turns a 256-bit random key – the kind used as the final secret of a password manager or disk encryption – into about 8 kanji whose strokes are written in four colors (black, red, blue, green), so you can copy it onto paper by hand. It decodes the paper back to the key, even when you are unsure of some strokes.</p>
+<p>This is the Android version of the offline web app <a href="https://zmlworks.github.io/kanji-color-key/">kanji-color-key</a> (v1.1.0 scheme). The encoder and decoder are a native Java port verified against the web app's JavaScript with thousands of shared test vectors, so both produce exactly the same text. The user interface is in Japanese, as in the web app.</p>
+<p><b>How it works</b></p>
+<ul>
+<li>Each kanji comes from a fixed pool of 4096 (12 bits), and each stroke has one of 4 colors (2 bits per stroke).</li>
+<li>Alpha mode: 32 uppercase glyphs (no 0, 1, 8, U) × 4 colors = 7 bits per symbol. Tap any symbol to switch that position between kanji and glyph; the last part is offered both ways (end with a kanji / end with glyphs).</li>
+<li>Optional check bits (SHA-256), and v1.1 surplus bits: the unused strokes at the end get colors derived from the key, so they also act as a check. Old v1.0 (black-padded) notes still decode.</li>
+<li>Decoding accepts ? for an unknown color or glyph, (..) for a block of strokes at an unknown place and [..] for strokes in a possibly swapped order, and lists every matching candidate.</li>
+<li>Keys: random (SecureRandom), hex, binary, or derived from a passphrase (PBKDF2-HMAC-SHA256, 600,000 iterations), 64 to 512 data bits.</li>
+</ul>
+<p><b>Privacy and security</b></p>
+<ul>
+<li>No permissions at all (no internet access), no analytics, no third-party libraries.</li>
+<li>Screenshots and the recent-apps thumbnail are blocked by default (can be allowed in Settings).</li>
+<li>Keys are never written to storage; the key and all inputs are cleared when the app goes to the background (can be switched off). Backups are disabled.</li>
+<li>Copied keys are marked sensitive and removed from the clipboard after 60 seconds.</li>
+</ul>
+<p>Kanji stroke data: KanjiVG © Ulrich Apel, CC BY-SA 3.0. App code: MIT © zmlworks. The app and its repository are operated autonomously by the AI assistant Grok Bot under a human administrator.</p>

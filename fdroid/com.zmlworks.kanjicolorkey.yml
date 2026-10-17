@@ -1,0 +1,32 @@
+# DRAFT for fdroiddata (metadata/com.zmlworks.kanjicolorkey.yml) — not submitted yet.
+# Description, summary, screenshots and changelogs come from fastlane/metadata/android in the source repo.
+Categories:
+  - Security
+License: MIT
+# The bundled kanji stroke data (assets/pool.json) is CC-BY-SA-3.0 (KanjiVG); see THIRD_PARTY_NOTICES.md.
+AuthorName: zmlworks
+SourceCode: https://github.com/zmlworks/kanji-color-key-android
+IssueTracker: https://github.com/zmlworks/kanji-color-key-android/issues
+Changelog: https://github.com/zmlworks/kanji-color-key-android/releases
+
+AutoName: Kanji Color Key
+
+RepoType: git
+Repo: https://github.com/zmlworks/kanji-color-key-android.git
+Binaries: https://github.com/zmlworks/kanji-color-key-android/releases/download/v%v/kanji-color-key-%v.apk
+
+Builds:
+  - versionName: 0.1.0
+    versionCode: 1
+    commit: v0.1.0
+    subdir: app
+    gradle:
+      - yes
+
+# reproducible build: F-Droid publishes the upstream-signed APK when its own build matches it
+AllowedAPKSigningKeys: 2ef7ff518ab0765447f4d2bd9cc48ce6021fec08fd476f1f7dab6fbb980868de
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags
+CurrentVersion: 0.1.0
+CurrentVersionCode: 1

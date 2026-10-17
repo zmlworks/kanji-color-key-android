@@ -1,0 +1,1 @@
+Write a 256-bit key by hand as about 8 kanji with color-coded strokes. Offline.

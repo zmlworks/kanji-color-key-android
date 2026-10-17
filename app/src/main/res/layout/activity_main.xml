@@ -1,0 +1,359 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/topBar"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="16dp"
+        android:paddingEnd="8dp">
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/title"
+            android:textColor="#FFF1EEE4"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:text="@string/subtitle"
+            android:textColor="#FF9AA0AE"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/bDemo"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/demo"
+            android:textAllCaps="false"
+            android:textColor="#FFF1EEE4" />
+
+        <Button
+            android:id="@+id/bSettings"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/settings"
+            android:textAllCaps="false"
+            android:textColor="#FFF1EEE4" />
+    </LinearLayout>
+
+    <ScrollView
+        android:id="@+id/scroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@color/bg"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:id="@+id/content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="14dp">
+
+            <TextView
+                android:id="@+id/intro"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:lineSpacingMultiplier="1.15"
+                android:textColor="@color/text"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/legend"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:textColor="@color/text"
+                android:textSize="14sp" />
+
+            <!-- 鍵 -->
+            <LinearLayout style="@style/Section">
+
+                <TextView style="@style/Legend" android:text="@string/sec_key" />
+
+                <Button
+                    android:id="@+id/bRand"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/rand" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/data_bits"
+                        android:textColor="@color/text" />
+
+                    <SeekBar
+                        android:id="@+id/bits"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:max="56"
+                        android:progress="24" />
+
+                    <TextView
+                        android:id="@+id/bitsV"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/text"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:text="@string/bits_unit"
+                        android:textColor="@color/text" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/plus_check"
+                        android:textColor="@color/text" />
+
+                    <Button
+                        android:id="@+id/chkMinus"
+                        android:layout_width="48dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/minus" />
+
+                    <EditText
+                        android:id="@+id/chk"
+                        style="@style/Field"
+                    android:importantForAutofill="no"
+                        android:layout_width="64dp"
+                        android:gravity="center"
+                        android:hint="@string/zero"
+                        android:inputType="number"
+                        android:maxLength="2"
+                        android:text="@string/zero" />
+
+                    <Button
+                        android:id="@+id/chkPlus"
+                        android:layout_width="48dp"
+                        android:layout_height="wrap_content"
+                        android:text="@string/plus" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:text="@string/bits_unit"
+                        android:textColor="@color/text" />
+                </LinearLayout>
+
+                <TextView style="@style/Small" android:layout_marginTop="6dp" android:text="@string/hex_label" />
+                <EditText
+                    android:id="@+id/hex"
+                    style="@style/Field"
+                    android:importantForAutofill="no"
+                    android:hint="@string/hex_hint"
+                    android:inputType="textNoSuggestions|textVisiblePassword|textMultiLine" />
+                <Button
+                    android:id="@+id/bHex"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/use_hex" />
+
+                <TextView style="@style/Small" android:text="@string/bin_label" />
+                <EditText
+                    android:id="@+id/bin"
+                    style="@style/Field"
+                    android:importantForAutofill="no"
+                    android:hint="@string/bin_hint"
+                    android:inputType="textNoSuggestions|textVisiblePassword|textMultiLine" />
+                <Button
+                    android:id="@+id/bBin"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/use_bin" />
+
+                <TextView style="@style/Small" android:text="@string/pass_label" />
+                <EditText
+                    android:id="@+id/pass"
+                    style="@style/Field"
+                    android:importantForAutofill="no"
+                    android:hint="@string/pass_hint"
+                    android:inputType="textPassword" />
+                <TextView style="@style/Small" android:text="@string/salt_label" />
+                <EditText
+                    android:id="@+id/salt"
+                    style="@style/Field"
+                    android:importantForAutofill="no"
+                    android:hint="@string/salt_hint"
+                    android:inputType="textNoSuggestions" />
+                <Button
+                    android:id="@+id/bPass"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/use_pass" />
+
+                <TextView
+                    android:id="@+id/keyInfo"
+                    style="@style/Mono"
+                    android:layout_marginTop="6dp" />
+                <Button
+                    android:id="@+id/bCopyKey"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/copy_key" />
+            </LinearLayout>
+
+            <!-- エンコード結果 -->
+            <LinearLayout
+                android:id="@+id/seqBox"
+                style="@style/Section">
+
+                <TextView style="@style/Legend" android:text="@string/sec_encode" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    tools:ignore="ButtonStyle">
+
+                    <Button
+                        android:id="@+id/bAllK"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/all_kanji" />
+
+                    <Button
+                        android:id="@+id/bAllA"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:text="@string/all_alpha" />
+                </LinearLayout>
+
+                <TextView style="@style/Small" android:text="@string/encode_hint" />
+
+                <TextView
+                    android:id="@+id/info"
+                    style="@style/Mono"
+                    android:layout_marginTop="6dp"
+                    android:textSize="13sp" />
+
+                <com.zmlworks.kanjicolorkey.FlowLayout
+                    android:id="@+id/cards"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp" />
+
+                <LinearLayout
+                    android:id="@+id/variants"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+
+                <TextView
+                    android:id="@+id/err"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/err" />
+            </LinearLayout>
+
+            <!-- デコード -->
+            <LinearLayout style="@style/Section">
+
+                <TextView style="@style/Legend" android:text="@string/sec_decode" />
+
+                <TextView
+                    android:id="@+id/decHint"
+                    style="@style/Small" />
+
+                <EditText
+                    android:id="@+id/dec"
+                    style="@style/Field"
+                    android:importantForAutofill="no"
+                    android:gravity="top|start"
+                    android:hint="@string/decode_placeholder"
+                    android:inputType="textMultiLine|textNoSuggestions"
+                    android:minLines="3" />
+
+                <Button
+                    android:id="@+id/bDec"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/decode" />
+
+                <LinearLayout
+                    android:id="@+id/decOut"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+            </LinearLayout>
+
+            <LinearLayout style="@style/Section">
+
+                <TextView
+                    android:id="@+id/explainToggle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="?android:attr/selectableItemBackground"
+                    android:minHeight="44dp"
+                    android:gravity="center_vertical"
+                    android:text="@string/explain_closed"
+                    android:textColor="@color/text"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/explain"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:lineSpacingMultiplier="1.2"
+                    android:textColor="@color/text"
+                    android:textSize="14sp"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/footer"
+                style="@style/Small"
+                android:layout_marginTop="12dp" />
+
+            <TextView
+                android:id="@+id/version"
+                style="@style/Small"
+                android:layout_marginTop="4dp" />
+
+            <Button
+                android:id="@+id/bLicenses"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/licenses" />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The UI is Japanese, as in the web app. Only the launcher label has an English default (values-ja: 漢字色キー). -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="app_name">Kanji Color Key</string>
+    <string name="title">漢字色キー</string>
+    <string name="subtitle">kanji-color-key</string>
+    <string name="demo">デモ</string>
+    <string name="settings">設定</string>
+    <string name="loading">漢字データを読み込み中…</string>
+    <string name="intro"><![CDATA[<ul>
+<li>暗号化の最終的な鍵としてよく使われる 256 bit 乱数を一画ごとに色のついた約8文字の漢字に直します</li>
+<li>余剰bitが発生してもチェックになる利点があります（余った画や英数字も、黒ではなく鍵から決まる色で埋まります）</li>
+<li><s>見本の色は目安であり下に表示された色順を見てご自身の書き順で書かれることを想定しています（ある程度の揺らぎは試行できるため）</s></li>
+<li>最後は帳尻合わせのため色付き英数字を選べます。また、文字列の途中を英数字にして意味のある漢字を狙うこともできます</li>
+</ul>]]></string>
+    <string name="legend"><![CDATA[英数字にも、画ごとではなく1文字ごとに色の区別があります。 色: <b><font color="#111111">黒</font> <font color="#d62828">赤</font> <font color="#1d4ed8">青</font> <font color="#15803d">緑</font></b>]]></string>
+    <string name="sec_key">鍵</string>
+    <string name="rand">乱数で実験する</string>
+    <string name="data_bits">データビット数:</string>
+    <string name="bits_unit">bit</string>
+    <string name="plus_check">＋ チェック</string>
+    <string name="minus">−</string>
+    <string name="zero">0</string>
+    <string name="bits_custom">%1$d（入力値）</string>
+    <string name="plus">＋</string>
+    <string name="hex_label">16進:</string>
+    <string name="hex_hint">16進データ</string>
+    <string name="bin_label">2進:</string>
+    <string name="bin_hint">0101…</string>
+    <string name="pass_label">パスフレーズ (PBKDF2-SHA256 600000回):</string>
+    <string name="pass_hint">passphrase</string>
+    <string name="salt_label">ソルト:</string>
+    <string name="salt_hint">(任意)</string>
+    <string name="use_hex">16進を使う</string>
+    <string name="use_bin">2進を使う</string>
+    <string name="use_pass">パスフレーズから導出</string>
+    <string name="deriving">導出中…</string>
+    <string name="copy_key">鍵(16進)をコピー</string>
+    <string name="sec_encode">エンコード結果</string>
+    <string name="all_kanji">全部漢字</string>
+    <string name="all_alpha">全部英数字</string>
+    <string name="encode_hint">記号をタップすると、その位置を 漢字⇄英数字 に切り替えます（それより後ろの位置は漢字に戻ります。鍵は変わりません）。</string>
+    <string name="tail_kanji">最後を漢字で</string>
+    <string name="tail_alpha">最後を英数字で</string>
+    <string name="copy_text">文字列をコピー</string>
+    <string name="sec_decode">デコード</string>
+    <string name="decode_hint"><![CDATA[色は 0123 でも 黒赤青緑 でも入力可。記法: <tt>?</tt>=色・英数字不明, <tt>(56)</tt>=相対順序は保つが位置不明, <tt>[56]</tt>=順序入れ替えの可能性（漢字の画）。候補を列挙しチェックコードで絞り込みます。<tt>M(</tt>・<tt>(</tt>・<tt>A(</tt> 形式に対応。]]></string>
+    <string name="decode_placeholder">M(256+12bit)處23213313000 圃1223203223 I1 …</string>
+    <string name="decode">デコード</string>
+    <string name="decoding">デコード中…</string>
+    <string name="copy_hex">16進をコピー</string>
+    <string name="explain_closed">▶ AIによる解説（タップで開く）</string>
+    <string name="explain_open">▼ AIによる解説（タップで閉じる）</string>
+    <string name="licenses">ライセンス / Third-party notices</string>
+    <string name="close">閉じる</string>
+    <string name="copied">コピーしました（60秒後にクリップボードから消去します）</string>
+    <string name="wiped">バックグラウンドに移ったため、前の鍵と入力を消去しました（新しい乱数を表示しています）。</string>
+    <string name="set_screenshots">スクリーンショットと「最近使ったアプリ」での表示を許可する</string>
+    <string name="set_wipe">バックグラウンドに移ったら鍵と入力を消去する</string>
+    <string name="set_keep_screen">表示中は画面を消灯しない（紙に書き写す間）</string>
+    <string name="set_note">鍵はディスクに保存されません。設定（この3項目）だけが端末内に保存され、バックアップ対象外です。</string>
+    <string name="footer"><![CDATA[完全オフラインで動作します（インターネット権限なし・権限は一切なし）。英数字: <tt>2345679ABCDEFGHIJKLMNOPQRSTVWXYZ</tt>（0,1,8,U を除外）。ストロークデータ: <a href="https://kanjivg.tagaini.net/">KanjiVG</a> © Ulrich Apel (CC BY-SA 3.0)。<br>MIT License © zmlworks. このアプリとリポジトリはAIアシスタント Grok Bot により自律的に運用されています。<a href="https://github.com/zmlworks/kanji-color-key-android">GitHub</a>（<a href="https://zmlworks.github.io/kanji-color-key/">Web版</a>）]]></string>
+    <string name="version_line">アプリ %1$s ・ 方式 kanji-color-key v1.1.0（Web版と同じ符号化）</string>
+    <string name="explain"><![CDATA[<p><font color="#555555">※この解説は、このリポジトリを運用している AI アシスタント Grok Bot が、実際のプログラムを確認したうえで書いたものです（Web版の解説を Android 版に合わせて一部変更）。</font></p>
+<p><b><font color="#1d4ed8">■</font> どんな道具？</b></p>
+<p>パスワードマネージャーなどの「最後の鍵」として使われる 256bit の乱数を、紙に手で書き写せる形に直す道具です。数字や英字の羅列より覚えやすく、書き写し間違いに気づきやすい形を目指しています。</p>
+<p>紙のバックアップなら、ネットにつながらず、データ消失やサービス終了の影響も受けません。このアプリもインターネット権限を持たず、外部と通信しません（機内モードでも使えます）。</p>
+<p><b><font color="#1d4ed8">■</font> ビットの割り当て</b></p>
+<ul>
+<li><b>漢字</b>：決められた 4096 字（JIS第1水準 2965字＋第2水準の一部）から1字を選ぶので 12bit（2<sup>12</sup>=4096）。</li>
+<li><b>画の色</b>：その漢字の一画ごとに 黒・赤・青・緑 の4色から選ぶので 1画 2bit。</li>
+<li><b>英数字</b>：<tt>2345679ABCDEFGHIJKLMNOPQRSTVWXYZ</tt> の32字（0・1・8・U は除外）で 5bit、文字全体の色4色で 2bit、合わせて 7bit。</li>
+</ul>
+<p>計算例：「進」（11画）なら 12＋11×2＝34bit。プールの平均画数は約11画なので1字あたり平均約34bit、256bit なら 256÷34≒7.5 で、最後の1字を含めて<b>8字前後</b>（画数の少ない字が続くと9字以上）になります。乱数3000回の試算では、全部漢字で平均 約8.0字。最後を英数字にすると 漢字 約7.1字＋英数字 約2.8字でした。</p>
+<p><b><font color="#1d4ed8">■</font> 書き順と色</b></p>
+<p>色は「1画目、2画目…」の順に割り当てます。この画の順番は KanjiVG というデータに従っており、学校で習った書き順や自分の癖とずれることがあります。</p>
+<p>大事なのは<b>色の順番</b>です。<s>表示された色の並び（例：青緑青赤…）を前から順に使って書けば、自分の書き順で書いてかまいません。</s>読み返すときは、色を前から順に読み取ります。</p>
+<p><b><font color="#1d4ed8">■</font> あいまいな所の書き方と総当たり</b></p>
+<ul>
+<li><tt>?</tt>：その画（英数字なら文字や色）が分からない。色なら4通り、英数字の字なら32通りを試します。</li>
+<li><tt>(56)</tt>：この並びの順番は合っているが、その漢字の中のどこに入るか分からない。残りの画数が m 画なら m+1 通り。</li>
+<li><tt>[56]</tt>：この中の順番が入れ替わっているかもしれない。k画なら最大 k! 通り（3画で6通り）。</li>
+</ul>
+<p>デコードでは、これらの組み合わせを<b>すべて掛け合わせて総当たり</b>します（例：<tt>?</tt> が3つなら 4×4×4＝64通り）。200万通りを超える指定はエラーにしているので、印は狭い範囲に付けてください。</p>
+<p><b><font color="#1d4ed8">■</font> チェックコード</b></p>
+<p>任意で、データの後ろにチェック用のビットを付けられます。中身は SHA-256（「kck1」＋データのビット長＋データ）の先頭 C bit です。<b>既定は C=0（なし）</b>で、見出しは <tt>(256bit)</tt>、付けると <tt>(256+12bit)</tt> のようになります。</p>
+<p>ビットは「データ → チェック → 余り」の順に並びます。最後の文字の終わりまでの余り（最後の漢字の余った画、末尾の英数字の字や色など）は、SHA-256（「kckp」＋データのビット長＋番号＋データ）から取った<b>余剰ビット</b>で埋めます。同じ鍵なら毎回同じ色になり、鍵ごとに色がばらつきます（v1.0 までは黒で埋めていました）。デコード時には「余りが余剰ビットと一致するか」も照合されるので、これもチェックの代わりになります。</p>
+<p>総当たりの候補は、①余りが余剰ビットと一致（または v1.0 形式の全部0）、②チェックが一致、の両方を満たすものだけが残ります。黒は普通のデータ色でもありますが、余りは鍵の後ろの部分なので、どちらを受け付けても出てくる鍵は変わりません。v1.0 の黒い余りの書き付けもそのまま読めます。間違った候補が偶然残る確率は、およそ 2 の −(C＋余りのビット数) 乗です（C=12 なら約 1/4096。0埋めも受け付けるぶん最大2倍）。C=0 で余りもなければ絞り込みはできず、全候補が表示されるので、実際にパスワードマネージャーで試すことになります。</p>
+<p>チェックのビットが入った画にも <tt>?</tt> を付けられます。ただし、印を付けずに書き間違えると、正しい答えも候補から外れてしまいます。自信のない所には印を付けてください。</p>
+<p><b><font color="#1d4ed8">■</font> 漢字／英数字の切り替えと最後の2案</b></p>
+<p>記号をタップすると、その位置が 漢字⇄英数字 に切り替わります。鍵は変わらず、区切りだけが変わります。区切りがずれるので、タップした位置より後ろは漢字に戻ります。途中を英数字にして、後ろの漢字の並びを変え、意味のありそうな字が出るか探すこともできます。</p>
+<p>最後の部分は「最後を漢字で」（余った画は余剰ビットの色）と「最後を英数字で」（次の漢字が収まりきらない時点から英数字）の2案を並べて表示します。英数字で終える方が、余りは 7bit 未満で済みます。</p>
+<p><b><font color="#1d4ed8">■</font> 安全のための注意</b></p>
+<ul>
+<li>画面や紙を人に見られたり、写真に撮られたりすれば、それで鍵が漏れます。表示は人のいない所で行い、紙は大切に保管してください。</li>
+<li>色ペンは色あせたり、赤と黒の区別がつきにくくなったりします。耐光性のあるペンを使い、ときどき読めるか確かめてください。</li>
+<li><b>漢字そのものの書き間違い</b>は、今のところ <tt>?</tt> で救えません（1字に約34bitが入っているため）。字ははっきり書いてください。</li>
+<li>「乱数で実験する」の乱数は Android の <tt>SecureRandom</tt>（暗号用の乱数。Web版ではブラウザの <tt>crypto.getRandomValues</tt>）で作っています。</li>
+<li>パスフレーズから導出するモード（PBKDF2-SHA256、60万回）は、覚えている文から同じ鍵を再現するためのものです。安全性はパスフレーズの強さで決まるので、ランダムな鍵より弱くなりがちです。</li>
+<li>このアプリは既定でスクリーンショットと「最近使ったアプリ」の画面表示を禁止し、バックグラウンドに移ると鍵と入力を消去します。コピーした内容は機密扱いの印を付け、60秒後にクリップボードから消去します（設定で変更可）。</li>
+</ul>
+<p><b><font color="#1d4ed8">■</font> パスワードマネージャーでの使い方の例</b></p>
+<p>たとえば KeePass 系（KeePassXC、Android の KeePassDX など）では、表示された16進の鍵をテキストファイルに保存して「キーファイル」にし、マスターパスワードと組み合わせる使い方が考えられます。紙はこの鍵の控えになります。</p>
+<p>切り替える前に、<b>紙からデコードした鍵で実際にファイルを開けるか</b>を必ず確かめてください。既存のデータベースは、移行が終わるまでバックアップを残しておくと安心です。キーファイルの扱い（中身をそのまま使うか、ハッシュするか）はアプリによって違うので、各アプリの説明も確認してください。</p>
+<p><b><font color="#1d4ed8">■</font> 限界と今後の案</b></p>
+<ul>
+<li>漢字の書き間違いを訂正する仕組み（候補の漢字を総当たりするなど）はまだありません。</li>
+<li>色の判別は人の目に頼っています。カメラで読み取る機能や、画数ぶんの色ボタンが並ぶ入力画面があると便利そうです。</li>
+<li>プールは漢検準1級の範囲の近似（JISの区分による）で、正式な字表ではありません。</li>
+</ul>]]></string>
+</resources>

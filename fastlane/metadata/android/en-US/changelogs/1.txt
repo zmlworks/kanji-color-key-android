@@ -1,0 +1,1 @@
+0.1.0 – first release. Native port of kanji-color-key v1.1.0 (kanji, alpha and mixed modes, surplus-bit coloring, check bits, decoding with ? () [], passphrase mode, demo). No permissions; screenshots blocked by default; keys cleared in the background; sensitive, auto-cleared clipboard.
