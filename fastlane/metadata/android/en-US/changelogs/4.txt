@@ -1,0 +1,1 @@
+Paper restore: type characters → KanjiVG stroke-order sample → flick colors (↑黒 →赤 ←青 ↓緑, center=?). Unknown "?" strokes are brute-forced (capped). Optional .kdbx verify for KeePass emergency open. When encoding a KeePass composite key, rewrite-random is disabled so the displayed key cannot change silently.

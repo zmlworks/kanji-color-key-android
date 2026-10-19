@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="?android:attr/colorBackground">
+
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:gravity="center_vertical" android:padding="8dp">
+        <Button android:id="@+id/bBack" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="@string/kp_back" android:textAllCaps="false" />
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+            android:text="@string/restore_title" android:textSize="18sp" android:textStyle="bold"
+            android:paddingStart="8dp" android:textColor="@color/text" />
+    </LinearLayout>
+
+    <TextView android:id="@+id/restoreHelp" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="@string/restore_help" android:textSize="13sp" android:textColor="@color/dim" android:padding="8dp" />
+
+    <!-- Step 1: characters -->
+    <LinearLayout android:id="@+id/panelChars" android:layout_width="match_parent" android:layout_height="0dp"
+        android:layout_weight="1" android:orientation="vertical" android:padding="12dp">
+        <EditText android:id="@+id/charsIn" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:hint="@string/restore_chars_hint" android:inputType="text" android:maxLines="3"
+            android:importantForAutofill="no" android:saveEnabled="false"
+            android:imeOptions="flagNoPersonalizedLearning" />
+        <CheckBox android:id="@+id/cbKf" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="@string/restore_kf" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="@string/restore_bits" android:textColor="@color/text" />
+            <EditText android:id="@+id/dataBits" android:layout_width="80dp" android:layout_height="wrap_content"
+                android:inputType="number" android:text="256" android:saveEnabled="false" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="@string/restore_check" android:textColor="@color/text" android:paddingStart="12dp" />
+            <EditText android:id="@+id/checkBits" android:layout_width="60dp" android:layout_height="wrap_content"
+                android:inputType="number" android:text="0" android:saveEnabled="false" />
+        </LinearLayout>
+        <Button android:id="@+id/bStartStrokes" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="@string/restore_start" android:textAllCaps="false" />
+        <TextView android:id="@+id/charsErr" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:textColor="@color/err" />
+    </LinearLayout>
+
+    <!-- Step 2: stroke flick -->
+    <ScrollView android:id="@+id/panelStrokes" android:layout_width="match_parent" android:layout_height="0dp"
+        android:layout_weight="1" android:visibility="gone">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical" android:padding="12dp" android:gravity="center_horizontal">
+            <TextView android:id="@+id/strokeProgress" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:textColor="@color/text" android:textSize="14sp" android:gravity="center" />
+            <FrameLayout android:id="@+id/sampleBox" android:layout_width="200dp" android:layout_height="200dp"
+                android:layout_marginTop="8dp" android:background="@drawable/section_bg" />
+            <TextView android:id="@+id/alphaHint" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:textColor="@color/dim" android:gravity="center" android:visibility="gone" />
+            <TextView android:id="@+id/strokeGuide" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:text="@string/restore_flick_guide" android:textColor="@color/dim" android:gravity="center"
+                android:paddingTop="6dp" />
+            <com.zmlworks.kanjicolorkey.FlickColorView
+                android:id="@+id/flick"
+                android:layout_width="240dp"
+                android:layout_height="240dp"
+                android:layout_marginTop="4dp" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="horizontal" android:gravity="center">
+                <Button android:id="@+id/bUndo" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="@string/restore_undo" android:textAllCaps="false" />
+                <Button android:id="@+id/bSkipChar" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="@string/restore_back_char" android:textAllCaps="false" />
+            </LinearLayout>
+            <TextView android:id="@+id/colorsSoFar" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:typeface="monospace" android:textColor="@color/text" android:textSize="12sp"
+                android:paddingTop="8dp" />
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Step 3: results -->
+    <ScrollView android:id="@+id/panelResults" android:layout_width="match_parent" android:layout_height="0dp"
+        android:layout_weight="1" android:visibility="gone">
+        <LinearLayout android:id="@+id/resultsBox" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical" android:padding="12dp" />
+    </ScrollView>
+
+    <TextView android:id="@+id/status" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:textColor="@color/dim" android:padding="8dp" />
+</LinearLayout>

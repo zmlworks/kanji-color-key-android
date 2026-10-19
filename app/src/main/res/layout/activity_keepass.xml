@@ -99,6 +99,8 @@
                 android:importantForAutofill="no" android:saveEnabled="false" android:visibility="gone" />
             <Button android:id="@+id/bOpen" android:layout_width="wrap_content" android:layout_height="wrap_content"
                 android:text="@string/kp_open" android:textAllCaps="false" />
+            <Button android:id="@+id/bRestorePaper" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="@string/restore" android:textAllCaps="false" />
         </LinearLayout>
 
         <!-- Create panel -->

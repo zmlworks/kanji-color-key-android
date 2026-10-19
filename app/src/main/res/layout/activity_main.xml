@@ -43,6 +43,15 @@
             android:textColor="@color/bar_text" />
 
         <Button
+            android:id="@+id/bRestore"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/restore"
+            android:textAllCaps="false"
+            android:textColor="@color/bar_text" />
+
+        <Button
             android:id="@+id/bDemo"
             style="?android:attr/borderlessButtonStyle"
             android:layout_width="wrap_content"
@@ -102,6 +111,17 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/rand" />
+
+                <TextView
+                    android:id="@+id/keyLockedHint"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/key_locked_hint"
+                    android:textColor="@color/dim"
+                    android:textSize="12sp"
+                    android:visibility="gone"
+                    android:paddingTop="4dp"
+                    android:paddingBottom="4dp" />
 
                 <LinearLayout
                     android:layout_width="match_parent"

@@ -133,6 +133,13 @@ public class KeePassActivity extends android.app.Activity {
         findViewById(R.id.bPickDbOpen).setOnClickListener(v -> pick(REQ_DB_OPEN, "*/*"));
         findViewById(R.id.bPickKeyOpen).setOnClickListener(v -> pick(REQ_KEY_OPEN, "*/*"));
         findViewById(R.id.bOpen).setOnClickListener(v -> openDb());
+        findViewById(R.id.bRestorePaper).setOnClickListener(v -> {
+            Intent i = new Intent(this, RestoreActivity.class);
+            i.putExtra(RestoreActivity.EXTRA_FROM_KEEPASS, true);
+            if (dbUriOpen != null) i.putExtra(RestoreActivity.EXTRA_KDBX_URI, dbUriOpen.toString());
+            else if (dbUriEm != null) i.putExtra(RestoreActivity.EXTRA_KDBX_URI, dbUriEm.toString());
+            startActivity(i);
+        });
         openMode.setOnCheckedChangeListener((g, id) -> updateOpenModeUi());
 
         findViewById(R.id.bPickKeyCreate).setOnClickListener(v -> pick(REQ_KEY_CREATE, "*/*"));
@@ -268,6 +275,7 @@ public class KeePassActivity extends android.app.Activity {
                     bShowKanji.setEnabled(true);
                     status.setText(R.string.kp_ok_emergency);
                 });
+
             } catch (Exception e) {
                 main.post(() -> {
                     setBusy(false);
@@ -281,6 +289,7 @@ public class KeePassActivity extends android.app.Activity {
         if (composite == null || composite.length != 32) return;
         Intent i = new Intent(this, MainActivity.class);
         i.putExtra(MainActivity.EXTRA_KEY_HEX, KeePassFacade.bytesToHex(composite));
+        i.putExtra(MainActivity.EXTRA_KEY_LOCKED, true);
         i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         startActivity(i);
     }

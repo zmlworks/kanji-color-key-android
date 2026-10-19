@@ -183,4 +183,36 @@
     <string name="kp_offer_emergency">今すぐ緊急鍵を漢字で表示しますか？</string>
     <string name="kp_yes">はい</string>
     <string name="kp_no">いいえ</string>
+
+    <!-- Paper restore / flick (0.4.0) -->
+    <string name="restore">紙から復元</string>
+    <string name="restore_title">紙から復元（書き順見本）</string>
+    <string name="restore_help">紙に書いた字を入力します。各字の KanjiVG 書き順見本に合わせて、フリックで画の色を入れます（中央タップ＝不明 "?"）。英数字は字全体で1色です。</string>
+    <string name="restore_chars_hint">例: 處圃進… または英数字・かな</string>
+    <string name="restore_kf">全部かなを固定長（KF）として読む（各かなは色3つ）</string>
+    <string name="restore_bits">データbit:</string>
+    <string name="restore_check">チェック:</string>
+    <string name="restore_start">書き順入力を開始</string>
+    <string name="restore_need_chars">字を入力してください</string>
+    <string name="restore_unknown_char">「%1$s」は漢字プール・かな32・英数字32のどれにもありません</string>
+    <string name="restore_progress">%1$d/%2$d 字「%3$s」· 画 %4$d/%5$d</string>
+    <string name="restore_flick_guide">↑黒 · →赤 · ←青 · ↓緑 · 中央=?</string>
+    <string name="restore_undo">1画戻す</string>
+    <string name="restore_back_char">前の字へ</string>
+    <string name="restore_alpha_hint">英数字「%1$s」は字全体の色を1つ選びます（画はありません）</string>
+    <string name="restore_combos">不明な色: %1$d 画 → 最大 %2$d 通りを試します</string>
+    <string name="restore_decode">デコード</string>
+    <string name="restore_decode_kdbx">デコードして .kdbx で照合（遅い）</string>
+    <string name="restore_kdbx_loaded">照合用の .kdbx を読み込みました（候補ごとに KDF が走るため時間がかかります）</string>
+    <string name="restore_kdbx_trying">.kdbx で候補を照合中…</string>
+    <string name="restore_kdbx_progress">候補 %1$d/%2$d · 一致 %3$d · %4$.1f 秒</string>
+    <string name="restore_kdbx_none">一致する候補はありませんでした</string>
+    <string name="restore_no_candidates">候補なし</string>
+    <string name="restore_open_keepass">KeePassで開く</string>
+    <string name="key_locked_hint">KeePassの緊急鍵を表示中です。乱数の作り直しは無効です（鍵を変えません）。</string>
+    <string name="key_locked_rand_disabled">緊急鍵モードのため「乱数で実験する」は使えません</string>
+
+    <string name="restore_too_many_unknowns">不明な色が多すぎます（上限 %1$d 画）。わかっている画から入れてください。</string>
+    <string name="restore_kdbx_estimate">.kdbx 照合は候補ごとに KDF（AES-KDF 約50万回 または Argon2 64MiB）が走ります。件数×数秒〜数十秒かかります。キャンセル可。</string>
+    <string name="kp_restore_paper">紙の色から緊急鍵を復元</string>
 </resources>

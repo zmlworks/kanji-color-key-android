@@ -62,6 +62,8 @@ import java.util.concurrent.Executors;
 public class MainActivity extends Activity {
     /** Hex 256-bit key from KeePass emergency-key flow. */
     public static final String EXTRA_KEY_HEX = "key_hex";
+    /** When true with EXTRA_KEY_HEX: never regenerate; disable rewrite-random. */
+    public static final String EXTRA_KEY_LOCKED = "key_locked";
     private final Handler main = new Handler(Looper.getMainLooper());
     private ExecutorService exec;
     private Settings settings;
@@ -76,6 +78,8 @@ public class MainActivity extends Activity {
     private Map<Integer, Kck.Type> types = new TreeMap<>();
     private boolean bitsTouched, suppress, wiped;
     private volatile int gen;       // bumps on wipe: late background results are dropped
+    /** True when opened from KeePass emergency key: never rewrite random / clear custom. */
+    private boolean keyLocked;
     private AlertDialog dialog;
 
     // views
@@ -121,7 +125,7 @@ public class MainActivity extends Activity {
      * to disk; taken (and cleared) by the next onCreate.
      */
     static final class Carry {
-        byte[] key, custom; Map<Integer, Kck.Type> types; boolean alpha, kana, fixed, look, bitsTouched, explainOpen;
+        byte[] key, custom; Map<Integer, Kck.Type> types; boolean alpha, kana, fixed, look, bitsTouched, explainOpen, keyLocked;
         int slider; String chk, hex, bin, pass, salt, dec;
         static Carry pending;
     }
@@ -136,7 +140,7 @@ public class MainActivity extends Activity {
         Carry c = new Carry();
         c.key = key; c.custom = custom; c.types = types;
         c.alpha = tAlpha.isChecked(); c.kana = tKana.isChecked(); c.fixed = tFixed.isChecked(); c.look = lookAlways.isChecked();
-        c.bitsTouched = bitsTouched; c.slider = bits.getProgress(); c.explainOpen = explain.getVisibility() == View.VISIBLE;
+        c.bitsTouched = bitsTouched; c.keyLocked = keyLocked; c.slider = bits.getProgress(); c.explainOpen = explain.getVisibility() == View.VISIBLE;
         c.chk = chk.getText().toString(); c.hex = hex.getText().toString(); c.bin = bin.getText().toString();
         c.pass = pass.getText().toString(); c.salt = salt.getText().toString(); c.dec = dec.getText().toString();
         key = null; custom = null;
@@ -149,7 +153,7 @@ public class MainActivity extends Activity {
         if (c == null) return null;
         suppress = true;
         tAlpha.setChecked(c.alpha); tKana.setChecked(c.kana); tFixed.setChecked(c.fixed); lookAlways.setChecked(c.look);
-        bits.setProgress(c.slider); bitsTouched = c.bitsTouched;
+        bits.setProgress(c.slider); bitsTouched = c.bitsTouched; keyLocked = c.keyLocked;
         chk.setText(c.chk); hex.setText(c.hex); bin.setText(c.bin); pass.setText(c.pass); salt.setText(c.salt); dec.setText(c.dec);
         if (c.explainOpen) { explain.setVisibility(View.VISIBLE); explainToggle.setText(R.string.explain_open); }
         suppress = false;
@@ -187,6 +191,7 @@ public class MainActivity extends Activity {
         else key = Kck.randomBits(512);
         render();
         applyIncomingKeyHex(getIntent());
+        applyKeyLockedUi();
     }
 
     @Override protected void onSaveInstanceState(Bundle out) {
@@ -295,6 +300,10 @@ public class MainActivity extends Activity {
         for (EditText e : new EditText[]{hex, bin, dec, salt}) noCopy(e);
 
         findViewById(R.id.bRand).setOnClickListener(v -> {
+            if (keyLocked) {
+                Toast.makeText(this, R.string.key_locked_rand_disabled, Toast.LENGTH_SHORT).show();
+                return;
+            }
             if (pool == null) return;
             key = Kck.randomBits(512); custom = null;
             if (!bitsTouched) setSlider(256);
@@ -343,6 +352,8 @@ public class MainActivity extends Activity {
         bDec.setOnClickListener(v -> decode(false));
         findViewById(R.id.bDemo).setOnClickListener(v -> demo());
         findViewById(R.id.bKeepass).setOnClickListener(v -> startActivity(new Intent(this, KeePassActivity.class)));
+        View bRestore = findViewById(R.id.bRestore);
+        if (bRestore != null) bRestore.setOnClickListener(v -> startActivity(new Intent(this, RestoreActivity.class)));
         findViewById(R.id.bSettings).setOnClickListener(v -> showSettings());
         findViewById(R.id.bLicenses).setOnClickListener(v -> showLicenses());
         explainToggle.setOnClickListener(v -> {
@@ -667,18 +678,45 @@ public class MainActivity extends Activity {
         if (intent == null) return;
         String hex = intent.getStringExtra(EXTRA_KEY_HEX);
         if (hex == null || hex.isEmpty()) return;
+        boolean locked = intent.getBooleanExtra(EXTRA_KEY_LOCKED, true); // KeePass path defaults locked
         intent.removeExtra(EXTRA_KEY_HEX);
+        intent.removeExtra(EXTRA_KEY_LOCKED);
         if (pool == null) return;
         try {
             useBits(Kck.hexToBits(hex));
+            keyLocked = locked;
+            applyKeyLockedUi();
             Toast.makeText(this, R.string.kp_ok_emergency, Toast.LENGTH_SHORT).show();
         } catch (Kck.KckException e) {
             err.setText(e.getMessage());
         }
     }
 
+    /** Disable rewrite-random when showing a KeePass composite key; keep re-encoding the same bits. */
+    private void applyKeyLockedUi() {
+        View bRand = findViewById(R.id.bRand);
+        if (bRand != null) {
+            bRand.setEnabled(!keyLocked);
+            bRand.setAlpha(keyLocked ? 0.45f : 1f);
+        }
+        View hint = findViewById(R.id.keyLockedHint);
+        if (hint != null) hint.setVisibility(keyLocked ? View.VISIBLE : View.GONE);
+        // Hex/bin/pass passphrase rewrite also changes the key — disable when locked
+        for (int id : new int[]{R.id.bHex, R.id.bBin, R.id.bPass, R.id.bDemo}) {
+            View b = findViewById(id);
+            if (b != null) {
+                b.setEnabled(!keyLocked);
+                b.setAlpha(keyLocked ? 0.45f : 1f);
+            }
+        }
+    }
+
     // ---------- demo (#demo) ----------
     void demo() {
+        if (keyLocked) {
+            Toast.makeText(this, R.string.key_locked_rand_disabled, Toast.LENGTH_SHORT).show();
+            return;
+        }
         if (pool == null) return;
         WebModel.Demo dm = WebModel.demo(pool, kanaData.set);
         key = dm.key; custom = null;
