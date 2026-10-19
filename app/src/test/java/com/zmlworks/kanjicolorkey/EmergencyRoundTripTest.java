@@ -52,6 +52,7 @@ public class EmergencyRoundTripTest {
     }
 
     @org.junit.Before public void warmPoolStore() {
+        assumeTrue("local kdbx fixtures configured (KCK_KDBX_FIXTURES)", FIXTURES.length > 0);
         PoolStore.get(RuntimeEnvironment.getApplication());
         PoolStore.kana(RuntimeEnvironment.getApplication());
     }
