@@ -1,14 +1,16 @@
 package com.zmlworks.kanjicolorkey;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -28,11 +30,12 @@ import java.io.FileOutputStream;
 @Config(sdk = 35, qualifiers = "ja-w411dp-h891dp-port-xxhdpi")
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 public class RestoreUiTest {
-    static final File OUT = new File("/workspace/android/out/screens-0.4.0");
+    static final File OUT = new File("/workspace/android/out/screens-0.4.2");
 
     @Before public void setUp() {
         PoolStore.get(RuntimeEnvironment.getApplication());
         PoolStore.kana(RuntimeEnvironment.getApplication());
+        RamKeyStore.get().clear();
         OUT.mkdirs();
     }
 
@@ -47,71 +50,75 @@ public class RestoreUiTest {
                 View.MeasureSpec.makeMeasureSpec(411 * 3, View.MeasureSpec.EXACTLY),
                 View.MeasureSpec.makeMeasureSpec(891 * 3, View.MeasureSpec.EXACTLY));
         root.layout(0, 0, root.getMeasuredWidth(), root.getMeasuredHeight());
-        Bitmap b = Bitmap.createBitmap(root.getMeasuredWidth(), root.getMeasuredHeight(), Bitmap.Config.ARGB_8888);
+        Bitmap b = Bitmap.createBitmap(Math.max(1, root.getMeasuredWidth()),
+                Math.max(1, root.getMeasuredHeight()), Bitmap.Config.ARGB_8888);
         root.draw(new Canvas(b));
         return b;
     }
 
-    @Test public void restoreFlowScreenshots_andKeyLocked() throws Exception {
+    @Test public void restoreBlocks_andRamStoreScreens() throws Exception {
         ActivityController<RestoreActivity> ctl =
                 Robolectric.buildActivity(RestoreActivity.class).setup();
         RestoreActivity a = ctl.get();
-        ShadowLooper.idleMainLooper();
-        // wait pool load
-        for (int i = 0; i < 50; i++) {
-            ShadowLooper.idleMainLooper();
-            Thread.sleep(20);
-        }
-        save(shot(a.findViewById(R.id.root)), "01-restore-chars.png");
+        for (int i = 0; i < 40; i++) { ShadowLooper.idleMainLooper(); Thread.sleep(15); }
 
-        EditText chars = a.findViewById(R.id.charsIn);
-        chars.setText("處"); // one kanji from pool
-        a.findViewById(R.id.bStartStrokes).performClick();
-        ShadowLooper.idleMainLooper();
-        assertEquals(View.VISIBLE, a.findViewById(R.id.panelStrokes).getVisibility());
-        save(shot(a.findViewById(R.id.root)), "02-restore-flick.png");
+        assertNotNull(a.findViewById(R.id.ramStoreBar));
+        assertNotNull(a.findViewById(R.id.blockList));
+        save(shot(a.findViewById(R.id.root)), "01-restore-empty.png");
 
-        // Flick a few colors via listener
-        FlickColorView flick = a.findViewById(R.id.flick);
-        assertNotNull(flick);
-        // Simulate entering colors until results (or a few strokes)
-        for (int i = 0; i < 20; i++) {
+        LinearLayout list = a.findViewById(R.id.blockList);
+        assertTrue(list.getChildCount() >= 1);
+        View first = list.getChildAt(0);
+        EditText charIn = first.findViewById(R.id.charIn);
+        charIn.setText("處");
+        ShadowLooper.idleMainLooper();
+        assertEquals(View.VISIBLE, first.findViewById(R.id.sampleRow).getVisibility());
+        assertEquals(View.VISIBLE, first.findViewById(R.id.flick).getVisibility());
+
+        FlickColorView flick = first.findViewById(R.id.flick);
+        // fill strokes with colors (or ?)
+        for (int i = 0; i < 30; i++) {
             flick.getListenerForTest().onColor(i % 4);
             ShadowLooper.idleMainLooper();
-            if (a.findViewById(R.id.panelResults).getVisibility() == View.VISIBLE) break;
+            if (a.findViewById(R.id.bFinish).isEnabled()) break;
         }
-        if (a.findViewById(R.id.panelResults).getVisibility() == View.VISIBLE) {
-            save(shot(a.findViewById(R.id.root)), "03-restore-results.png");
-        } else {
-            // force finish by filling remaining with ?
-            for (int i = 0; i < 40; i++) {
-                flick.getListenerForTest().onColor(-1);
-                ShadowLooper.idleMainLooper();
-                if (a.findViewById(R.id.panelResults).getVisibility() == View.VISIBLE) break;
-            }
-            save(shot(a.findViewById(R.id.root)), "03-restore-results.png");
-        }
+        save(shot(a.findViewById(R.id.root)), "02-restore-one-char.png");
 
-        // Key-locked MainActivity
-        String hex = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
-        Intent i = new Intent(RuntimeEnvironment.getApplication(), MainActivity.class);
-        i.putExtra(MainActivity.EXTRA_KEY_HEX, hex);
-        i.putExtra(MainActivity.EXTRA_KEY_LOCKED, true);
-        ActivityController<MainActivity> mctl = Robolectric.buildActivity(MainActivity.class, i).setup();
-        MainActivity m = mctl.get();
+        a.findViewById(R.id.bAddChar).performClick();
         ShadowLooper.idleMainLooper();
-        for (int k = 0; k < 30; k++) { ShadowLooper.idleMainLooper(); Thread.sleep(20); }
-        assertTrue(!m.findViewById(R.id.bRand).isEnabled());
-        assertEquals(View.VISIBLE, m.findViewById(R.id.keyLockedHint).getVisibility());
-        save(shot(m.findViewById(R.id.root)), "04-key-locked.png");
+        assertTrue(list.getChildCount() >= 2);
+        save(shot(a.findViewById(R.id.root)), "03-restore-two-blocks.png");
+
+        // Draft saved in RAM
+        assertTrue(RamKeyStore.get().hasRestoreDraft());
+        RamStoreUi.refresh(a);
+        save(shot(a.findViewById(R.id.root)), "04-restore-with-ram-status.png");
+
+        // Clear store
+        a.findViewById(R.id.bRamClear).performClick();
+        ShadowLooper.idleMainLooper();
+        assertFalse(RamKeyStore.get().hasRestoreDraft());
+        save(shot(a.findViewById(R.id.ramStoreBar)), "05-ram-cleared.png");
+
+        // Key-locked main via store
+        RamKeyStore.get().setCompositeHex(
+                "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef");
+        android.content.Intent i = new android.content.Intent(
+                RuntimeEnvironment.getApplication(), MainActivity.class);
+        i.putExtra(MainActivity.EXTRA_USE_STORE_KEY, true);
+        i.putExtra(MainActivity.EXTRA_KEY_LOCKED, true);
+        MainActivity m = Robolectric.buildActivity(MainActivity.class, i).setup().get();
+        for (int k = 0; k < 30; k++) { ShadowLooper.idleMainLooper(); Thread.sleep(15); }
+        assertFalse(m.findViewById(R.id.bRand).isEnabled());
+        assertNotNull(m.findViewById(R.id.ramStoreBar));
+        save(shot(m.findViewById(R.id.root)), "06-main-store-key.png");
 
         // Dark restore
         RuntimeEnvironment.getApplication().getSharedPreferences("settings", 0)
                 .edit().putString("theme", Settings.THEME_DARK).commit();
-        ActivityController<RestoreActivity> dark =
-                Robolectric.buildActivity(RestoreActivity.class).setup();
-        ShadowLooper.idleMainLooper();
-        for (int k = 0; k < 30; k++) { ShadowLooper.idleMainLooper(); Thread.sleep(20); }
-        save(shot(dark.get().findViewById(R.id.root)), "05-restore-chars-dark.png");
+        RamKeyStore.get().clear();
+        RestoreActivity dark = Robolectric.buildActivity(RestoreActivity.class).setup().get();
+        for (int k = 0; k < 30; k++) { ShadowLooper.idleMainLooper(); Thread.sleep(15); }
+        save(shot(dark.findViewById(R.id.root)), "07-restore-dark.png");
     }
 }

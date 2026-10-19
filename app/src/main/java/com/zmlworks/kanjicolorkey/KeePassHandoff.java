@@ -2,61 +2,35 @@ package com.zmlworks.kanjicolorkey;
 
 import android.net.Uri;
 
-import java.util.Arrays;
-
-/**
- * Process-local, memory-only handoff of .kdbx bytes / composite hex between KeePass and Restore.
- * Avoids relying on SAF URI permissions across activities (a common cause of "won't open").
- * Caller must wipe; take() clears the slot.
- */
+/** @deprecated Use {@link RamKeyStore}; kept as thin wrappers for older call sites. */
 public final class KeePassHandoff {
-    private static byte[] kdbxBytes;
-    private static String kdbxName;
-    private static Uri kdbxUri;
-    private static String compositeHex;
-
     private KeePassHandoff() {}
 
-    public static synchronized void putKdbx(byte[] bytes, String name, Uri uri) {
-        wipe(kdbxBytes);
-        kdbxBytes = bytes == null ? null : bytes.clone();
-        kdbxName = name;
-        kdbxUri = uri;
+    public static void putKdbx(byte[] bytes, String name, Uri uri) {
+        RamKeyStore.get().setKdbx(bytes, name, uri);
     }
 
-    public static synchronized void putCompositeHex(String hex) {
-        compositeHex = hex;
+    public static void putCompositeHex(String hex) {
+        try { RamKeyStore.get().setCompositeHex(hex); } catch (Exception ignored) {
+            // keep old behaviour of storing even if invalid — store as decoded hex only
+            RamKeyStore.get().setDecodedKeyHex(hex);
+        }
     }
 
-    /** Returns a copy of kdbx bytes and clears the slot. */
-    public static synchronized byte[] takeKdbxBytes() {
-        byte[] b = kdbxBytes;
-        kdbxBytes = null;
+    public static byte[] takeKdbxBytes() {
+        byte[] b = RamKeyStore.get().peekKdbx();
+        // peek only — store keeps until Clear (RAM reuse across pages)
         return b;
     }
 
-    public static synchronized byte[] peekKdbxBytes() {
-        return kdbxBytes == null ? null : kdbxBytes.clone();
+    public static byte[] peekKdbxBytes() { return RamKeyStore.get().peekKdbx(); }
+
+    public static String takeCompositeHex() {
+        return RamKeyStore.get().peekCompositeHex();
     }
 
-    public static synchronized String takeCompositeHex() {
-        String h = compositeHex;
-        compositeHex = null;
-        return h;
-    }
+    public static String kdbxName() { return RamKeyStore.get().kdbxName(); }
+    public static Uri kdbxUri() { return RamKeyStore.get().kdbxUri(); }
 
-    public static synchronized String kdbxName() { return kdbxName; }
-    public static synchronized Uri kdbxUri() { return kdbxUri; }
-
-    public static synchronized void clear() {
-        wipe(kdbxBytes);
-        kdbxBytes = null;
-        kdbxName = null;
-        kdbxUri = null;
-        compositeHex = null;
-    }
-
-    private static void wipe(byte[] b) {
-        if (b != null) Arrays.fill(b, (byte) 0);
-    }
+    public static void clear() { RamKeyStore.get().clear(); }
 }

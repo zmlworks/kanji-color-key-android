@@ -64,6 +64,8 @@ public class MainActivity extends Activity {
     public static final String EXTRA_KEY_HEX = "key_hex";
     /** When true with EXTRA_KEY_HEX: never regenerate; disable rewrite-random. */
     public static final String EXTRA_KEY_LOCKED = "key_locked";
+    /** Prefer {@link RamKeyStore} composite/decoded key over Intent extras. */
+    public static final String EXTRA_USE_STORE_KEY = "use_store_key";
     private final Handler main = new Handler(Looper.getMainLooper());
     private ExecutorService exec;
     private Settings settings;
@@ -229,6 +231,7 @@ public class MainActivity extends Activity {
         if (custom != null) Arrays.fill(custom, (byte) 0);
         key = null; custom = null; last = null;
         types = new TreeMap<>();
+        RamKeyStore.get().clear();
         keyInfo.setText(""); info.setText(""); err.setText("");
         cards.removeAllViews(); variants.removeAllViews(); decOut.removeAllViews();
         bDec.setEnabled(true); bPass.setEnabled(true);
@@ -298,6 +301,8 @@ public class MainActivity extends Activity {
         ((TextView) findViewById(R.id.version)).setText(getString(R.string.version_line, versionName()));
         bitsV.setText(String.valueOf(sliderBits()));
         for (EditText e : new EditText[]{hex, bin, dec, salt}) noCopy(e);
+        PasswordVisibility.attach(pass);
+        RamStoreUi.bind(this);
 
         findViewById(R.id.bRand).setOnClickListener(v -> {
             if (keyLocked) {
@@ -676,19 +681,26 @@ public class MainActivity extends Activity {
     /** Accept a 256-bit key as hex (from KeePass emergency key) and show encoding. */
     private void applyIncomingKeyHex(Intent intent) {
         if (intent == null) return;
-        String hex = intent.getStringExtra(EXTRA_KEY_HEX);
+        boolean useStore = intent.getBooleanExtra(EXTRA_USE_STORE_KEY, false);
+        String hex = null;
+        if (useStore) {
+            hex = RamKeyStore.get().peekCompositeHex();
+            if (hex == null) hex = RamKeyStore.get().peekDecodedKeyHex();
+            intent.removeExtra(EXTRA_USE_STORE_KEY);
+        }
+        if (hex == null || hex.isEmpty()) hex = intent.getStringExtra(EXTRA_KEY_HEX);
         if (hex == null || hex.isEmpty()) return;
-        boolean locked = intent.getBooleanExtra(EXTRA_KEY_LOCKED, true); // KeePass path defaults locked
+        boolean locked = intent.getBooleanExtra(EXTRA_KEY_LOCKED, true);
         intent.removeExtra(EXTRA_KEY_HEX);
         intent.removeExtra(EXTRA_KEY_LOCKED);
         if (pool == null) return;
         try {
-            useBits(Kck.hexToBits(hex));
+            useBits(Kck.hexToBits(hex.length() > 64 ? hex.substring(0, 64) : hex));
             keyLocked = locked;
-            // Emergency keys: default 16-bit check so a paper restore can prune before slow KDF.
             if (locked && checkBits() == 0) setCheck(16);
             applyKeyLockedUi();
             Toast.makeText(this, R.string.kp_ok_emergency, Toast.LENGTH_SHORT).show();
+            RamStoreUi.refresh(this);
         } catch (Kck.KckException e) {
             err.setText(e.getMessage());
         }

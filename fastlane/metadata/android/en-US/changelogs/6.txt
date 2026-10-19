@@ -1,0 +1,1 @@
+Password show/hide on secret fields. RAM-only key store (password, keyfile, composite, kdbx, restore draft) shared across screens with status/Clear/Quit; wipe-on-background clears it. Redesigned paper restore: vertical character blocks with KanjiVG sample, flick colors, color-name list (5/line), draft survives failed decode.

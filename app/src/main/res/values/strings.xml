@@ -66,7 +66,7 @@
     <string name="wiped">バックグラウンドに移ったため、前の鍵と入力を消去しました（新しい乱数を表示しています）。</string>
     <string name="set_security">セキュリティ（すべて任意。既定はオフ）</string>
     <string name="set_screenshots">スクリーンショットと「最近使ったアプリ」での表示を禁止する</string>
-    <string name="set_wipe">バックグラウンドに移ったら鍵と入力を消去する</string>
+    <string name="set_wipe">バックグラウンドで消去（画面の鍵・RAM保持もゼロクリア。設定変更時は消えない）</string>
     <string name="set_keep_screen">表示中は画面を消灯しない（紙に書き写す間）</string>
     <string name="set_clip_clear">コピーした内容を60秒後にクリップボードから消去する</string>
     <string name="set_theme">表示テーマ</string>
@@ -228,4 +228,15 @@
     <string name="restore_mismatch_estimate">不一致探索: 約 %1$d 通り（深さ %2$d）。チェックbitがあると KDF 前に絞れます。</string>
     <string name="restore_mismatch_progress">不一致深さ%1$d · 候補文字列 %2$d/%3$d · 鍵候補 %4$d</string>
     <string name="restore_check_hint">紙に書いたヘッダのチェックbit（例: M(256+16bit) なら 16）を合わせてください。0 のままだと不一致探索は遅くなります。</string>
+    <string name="ram_store_hint">鍵情報はRAMのみ（ディスク非保存・プロセス終了で消える）。バックグラウンド消去設定ONなら裏に回ったときも消えます。</string>
+    <string name="ram_store_clear">RAMを消去</string>
+    <string name="ram_store_quit">アプリ終了（消去）</string>
+    <string name="ram_store_empty">（保持中の鍵なし）</string>
+    <string name="ram_store_held">RAM保持: %1$s</string>
+    <string name="restore_help_v2">各行に1字入力→書き順見本→フリックで色。右に色名（5画/行）。色名をタップでその画をやり直し。「完了」でデコード。</string>
+    <string name="restore_add_char">文字を追加</string>
+    <string name="restore_finish">完了（デコード）</string>
+    <string name="restore_delete_block">削除</string>
+    <string name="restore_need_fill">すべての字と色を入れてください（?可）</string>
+    <string name="restore_back_edit">入力に戻る</string>
 </resources>

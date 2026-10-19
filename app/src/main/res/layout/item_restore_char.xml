@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="8dp"
+    android:layout_marginBottom="8dp"
+    android:background="@drawable/section_bg">
+
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:gravity="center_vertical">
+        <EditText android:id="@+id/charIn" android:layout_width="56dp" android:layout_height="wrap_content"
+            android:gravity="center" android:textSize="28sp" android:maxLength="2"
+            android:inputType="text" android:importantForAutofill="no" android:saveEnabled="false"
+            android:imeOptions="flagNoPersonalizedLearning" />
+        <Button android:id="@+id/bDeleteBlock" android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:text="@string/restore_delete_block"
+            android:textAllCaps="false" />
+        <TextView android:id="@+id/blockErr" android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:textColor="@color/err" android:textSize="12sp" />
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/sampleRow" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:orientation="horizontal"
+        android:visibility="gone" android:gravity="top">
+        <FrameLayout android:id="@+id/sampleBox" android:layout_width="140dp"
+            android:layout_height="140dp" android:background="@color/bg" />
+        <TextView android:id="@+id/colorNames" android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:paddingStart="8dp" android:textSize="16sp"
+            android:lineSpacingExtra="4dp" android:textIsSelectable="false" />
+    </LinearLayout>
+
+    <com.zmlworks.kanjicolorkey.FlickColorView
+        android:id="@+id/flick"
+        android:layout_width="180dp"
+        android:layout_height="180dp"
+        android:layout_gravity="center_horizontal"
+        android:visibility="gone" />
+</LinearLayout>

@@ -85,6 +85,8 @@
             android:orientation="vertical"
             android:padding="14dp">
 
+            <include layout="@layout/ram_store_bar" />
+
             <TextView
                 android:id="@+id/intro"
                 android:layout_width="match_parent"

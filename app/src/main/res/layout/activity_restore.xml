@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="?android:attr/colorBackground">
+    android:background="@color/bg">
 
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
         android:orientation="horizontal" android:gravity="center_vertical" android:padding="8dp">
@@ -15,87 +15,58 @@
             android:paddingStart="8dp" android:textColor="@color/text" />
     </LinearLayout>
 
-    <TextView android:id="@+id/restoreHelp" android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:text="@string/restore_help" android:textSize="13sp" android:textColor="@color/dim" android:padding="8dp" />
+    <include layout="@layout/ram_store_bar" />
 
-    <!-- Step 1: characters -->
-    <LinearLayout android:id="@+id/panelChars" android:layout_width="match_parent" android:layout_height="0dp"
-        android:layout_weight="1" android:orientation="vertical" android:padding="12dp">
-        <EditText android:id="@+id/charsIn" android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:hint="@string/restore_chars_hint" android:inputType="text" android:maxLines="3"
-            android:importantForAutofill="no" android:saveEnabled="false"
-            android:imeOptions="flagNoPersonalizedLearning" />
-        <CheckBox android:id="@+id/cbKf" android:layout_width="match_parent" android:layout_height="wrap_content"
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="@string/restore_help_v2" android:textSize="12sp" android:textColor="@color/dim"
+        android:padding="8dp" />
+
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:paddingHorizontal="8dp" android:gravity="center_vertical">
+        <CheckBox android:id="@+id/cbKf" android:layout_width="wrap_content" android:layout_height="wrap_content"
             android:text="@string/restore_kf" />
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="@string/restore_bits" android:textColor="@color/text" />
-            <EditText android:id="@+id/dataBits" android:layout_width="80dp" android:layout_height="wrap_content"
-                android:inputType="number" android:text="256" android:saveEnabled="false" />
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="@string/restore_check" android:textColor="@color/text" android:paddingStart="12dp" />
-            <EditText android:id="@+id/checkBits" android:layout_width="60dp" android:layout_height="wrap_content"
-                android:inputType="number" android:text="0" android:saveEnabled="false" />
-        </LinearLayout>
-        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:text="@string/restore_check_hint" android:textColor="@color/dim" android:textSize="12sp"
-            android:paddingBottom="4dp" />
-        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:text="@string/restore_mismatch" android:textColor="@color/text" />
-        <RadioGroup android:id="@+id/mismatchDepth" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:orientation="horizontal">
-            <RadioButton android:id="@+id/mismatch0" android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="@string/restore_mismatch_0" android:checked="true" />
-            <RadioButton android:id="@+id/mismatch1" android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="@string/restore_mismatch_1" />
-            <RadioButton android:id="@+id/mismatch2" android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="@string/restore_mismatch_2" />
-        </RadioGroup>
-        <Button android:id="@+id/bStartStrokes" android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="@string/restore_start" android:textAllCaps="false" />
-        <TextView android:id="@+id/charsErr" android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:textColor="@color/err" />
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="@string/restore_bits" android:textColor="@color/text" android:paddingStart="8dp" />
+        <EditText android:id="@+id/dataBits" android:layout_width="64dp" android:layout_height="wrap_content"
+            android:inputType="number" android:text="256" android:saveEnabled="false" />
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="@string/restore_check" android:textColor="@color/text" android:paddingStart="6dp" />
+        <EditText android:id="@+id/checkBits" android:layout_width="48dp" android:layout_height="wrap_content"
+            android:inputType="number" android:text="0" android:saveEnabled="false" />
     </LinearLayout>
 
-    <!-- Step 2: stroke flick -->
-    <ScrollView android:id="@+id/panelStrokes" android:layout_width="match_parent" android:layout_height="0dp"
-        android:layout_weight="1" android:visibility="gone">
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:orientation="vertical" android:padding="12dp" android:gravity="center_horizontal">
-            <TextView android:id="@+id/strokeProgress" android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:textColor="@color/text" android:textSize="14sp" android:gravity="center" />
-            <FrameLayout android:id="@+id/sampleBox" android:layout_width="200dp" android:layout_height="200dp"
-                android:layout_marginTop="8dp" android:background="@drawable/section_bg" />
-            <TextView android:id="@+id/alphaHint" android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:textColor="@color/dim" android:gravity="center" android:visibility="gone" />
-            <TextView android:id="@+id/strokeGuide" android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:text="@string/restore_flick_guide" android:textColor="@color/dim" android:gravity="center"
-                android:paddingTop="6dp" />
-            <com.zmlworks.kanjicolorkey.FlickColorView
-                android:id="@+id/flick"
-                android:layout_width="240dp"
-                android:layout_height="240dp"
-                android:layout_marginTop="4dp" />
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:orientation="horizontal" android:gravity="center">
-                <Button android:id="@+id/bUndo" android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:text="@string/restore_undo" android:textAllCaps="false" />
-                <Button android:id="@+id/bSkipChar" android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:text="@string/restore_back_char" android:textAllCaps="false" />
-            </LinearLayout>
-            <TextView android:id="@+id/colorsSoFar" android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:typeface="monospace" android:textColor="@color/text" android:textSize="12sp"
-                android:paddingTop="8dp" />
-        </LinearLayout>
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="@string/restore_mismatch" android:textColor="@color/text" android:paddingHorizontal="8dp" />
+    <RadioGroup android:id="@+id/mismatchDepth" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:orientation="horizontal" android:paddingHorizontal="8dp">
+        <RadioButton android:id="@+id/mismatch0" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="@string/restore_mismatch_0" android:checked="true" />
+        <RadioButton android:id="@+id/mismatch1" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="@string/restore_mismatch_1" />
+        <RadioButton android:id="@+id/mismatch2" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="@string/restore_mismatch_2" />
+    </RadioGroup>
+
+    <ScrollView android:id="@+id/blockScroll" android:layout_width="match_parent"
+        android:layout_height="0dp" android:layout_weight="1">
+        <LinearLayout android:id="@+id/blockList" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:orientation="vertical" android:padding="8dp" />
     </ScrollView>
 
-    <!-- Step 3: results -->
-    <ScrollView android:id="@+id/panelResults" android:layout_width="match_parent" android:layout_height="0dp"
-        android:layout_weight="1" android:visibility="gone">
-        <LinearLayout android:id="@+id/resultsBox" android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:orientation="vertical" android:padding="12dp" />
-    </ScrollView>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:padding="8dp" android:gravity="center">
+        <Button android:id="@+id/bAddChar" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="@string/restore_add_char" android:textAllCaps="false" />
+        <Button android:id="@+id/bFinish" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="@string/restore_finish" android:textAllCaps="false" android:enabled="false" />
+    </LinearLayout>
 
     <TextView android:id="@+id/status" android:layout_width="match_parent" android:layout_height="wrap_content"
         android:textColor="@color/dim" android:padding="8dp" />
+
+    <ScrollView android:id="@+id/panelResults" android:layout_width="match_parent"
+        android:layout_height="0dp" android:layout_weight="1" android:visibility="gone">
+        <LinearLayout android:id="@+id/resultsBox" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:orientation="vertical" android:padding="12dp" />
+    </ScrollView>
 </LinearLayout>

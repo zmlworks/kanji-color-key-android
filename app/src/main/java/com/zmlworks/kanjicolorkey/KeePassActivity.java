@@ -37,6 +37,7 @@ import app.keemobile.kotpass.database.KeePassDatabase;
  */
 public class KeePassActivity extends android.app.Activity {
     public static final String EXTRA_COMPOSITE_HEX = "composite_hex";
+    public static final String EXTRA_USE_STORE = "use_store";
 
     private static final int REQ_DB_EM = 1, REQ_KEY_EM = 2, REQ_DB_OPEN = 3, REQ_KEY_OPEN = 4,
             REQ_KEY_CREATE = 5, REQ_CREATE_DOC = 6, REQ_SAVE_DOC = 7;
@@ -118,6 +119,10 @@ public class KeePassActivity extends android.app.Activity {
         keyNameOpen.setText(R.string.kp_file_none);
         keyNameCreate.setText(R.string.kp_file_none);
         createName.setText("Passwords");
+        PasswordVisibility.attach(passwordEm);
+        PasswordVisibility.attach(passwordOpen);
+        PasswordVisibility.attach(passwordCreate);
+        RamStoreUi.bind(this);
 
         findViewById(R.id.bBack).setOnClickListener(v -> finish());
         findViewById(R.id.tabEmergency).setOnClickListener(v -> showPanel(0));
@@ -153,15 +158,32 @@ public class KeePassActivity extends android.app.Activity {
         bAddEntry.setOnClickListener(v -> editEntry(null));
         bSaveDb.setOnClickListener(v -> saveOpenDb());
 
+        boolean useStore = getIntent().getBooleanExtra(EXTRA_USE_STORE, false);
         String prefill = getIntent().getStringExtra(EXTRA_COMPOSITE_HEX);
-        if (prefill == null || prefill.isEmpty()) prefill = KeePassHandoff.takeCompositeHex();
-        byte[] handed = KeePassHandoff.peekKdbxBytes();
+        if (prefill == null || prefill.isEmpty()) prefill = RamKeyStore.get().peekCompositeHex();
+        byte[] handed = RamKeyStore.get().peekKdbx();
         if (handed != null && dbBytesOpen == null) {
             dbBytesOpen = handed;
-            openUri = KeePassHandoff.kdbxUri();
+            openUri = RamKeyStore.get().kdbxUri();
             dbUriOpen = openUri;
-            String nm = KeePassHandoff.kdbxName();
+            String nm = RamKeyStore.get().kdbxName();
             dbNameOpen.setText(nm != null ? nm : getString(R.string.kp_file_handoff));
+        }
+        String storedPw = RamKeyStore.get().peekMasterPassword();
+        if (storedPw != null) {
+            passwordEm.setText(storedPw);
+            passwordOpen.setText(storedPw);
+            passwordCreate.setText(storedPw);
+        }
+        byte[] kf = RamKeyStore.get().peekKeyfile();
+        if (kf != null) {
+            keyBytesEm = kf.clone();
+            keyBytesOpen = kf.clone();
+            keyBytesCreate = kf.clone();
+            String kn = RamKeyStore.get().keyfileName();
+            if (kn != null) {
+                keyNameEm.setText(kn); keyNameOpen.setText(kn); keyNameCreate.setText(kn);
+            }
         }
         if (prefill != null && !prefill.isEmpty()) {
             showPanel(1);
@@ -169,7 +191,10 @@ public class KeePassActivity extends android.app.Activity {
             compositeHex.setText(prefill);
             updateOpenModeUi();
             status.setText(R.string.kp_handoff_ready);
+        } else if (useStore && handed != null) {
+            showPanel(1);
         } else showPanel(0);
+        RamStoreUi.refresh(this);
     }
 
     private void applySecureFlags() {
@@ -298,11 +323,15 @@ public class KeePassActivity extends android.app.Activity {
                     wipe(lastEmergencyComposite);
                     lastEmergencyComposite = composite;
                     bShowKanji.setEnabled(true);
+                    RamKeyStore.get().setMasterPassword(pw);
+                    RamKeyStore.get().setComposite(composite);
+                    if (kf != null) RamKeyStore.get().setKeyfile(kf,
+                            keyNameEm.getText() != null ? keyNameEm.getText().toString() : null);
                     if (dbBytesEm != null)
-                        KeePassHandoff.putKdbx(dbBytesEm,
+                        RamKeyStore.get().setKdbx(dbBytesEm,
                                 dbNameEm.getText() != null ? dbNameEm.getText().toString() : null, dbUriEm);
-                    KeePassHandoff.putCompositeHex(KeePassFacade.bytesToHex(composite));
                     status.setText(R.string.kp_ok_emergency);
+                    RamStoreUi.refresh(KeePassActivity.this);
                 });
 
             } catch (Exception e) {
@@ -316,13 +345,12 @@ public class KeePassActivity extends android.app.Activity {
 
     private void showAsKanji(byte[] composite) {
         if (composite == null || composite.length != 32) return;
-        String hex = KeePassFacade.bytesToHex(composite);
-        KeePassHandoff.putCompositeHex(hex);
+        RamKeyStore.get().setComposite(composite);
         if (dbBytesEm != null)
-            KeePassHandoff.putKdbx(dbBytesEm,
+            RamKeyStore.get().setKdbx(dbBytesEm,
                     dbNameEm.getText() != null ? dbNameEm.getText().toString() : null, dbUriEm);
         Intent i = new Intent(this, MainActivity.class);
-        i.putExtra(MainActivity.EXTRA_KEY_HEX, hex);
+        i.putExtra(MainActivity.EXTRA_USE_STORE_KEY, true);
         i.putExtra(MainActivity.EXTRA_KEY_LOCKED, true);
         i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         startActivity(i);
@@ -342,6 +370,14 @@ public class KeePassActivity extends android.app.Activity {
                 Credentials creds;
                 if (usePw) {
                     creds = KeePassFacade.credentialsFromPassword(pw, kf);
+                    main.post(() -> {
+                        RamKeyStore.get().setMasterPassword(pw);
+                        if (kf != null) RamKeyStore.get().setKeyfile(kf,
+                                keyNameOpen.getText() != null ? keyNameOpen.getText().toString() : null);
+                        if (db != null) RamKeyStore.get().setKdbx(db,
+                                dbNameOpen.getText() != null ? dbNameOpen.getText().toString() : null, dbUriOpen);
+                        RamStoreUi.refresh(KeePassActivity.this);
+                    });
                 } else {
                     byte[] composite;
                     String h = hex.replaceAll("\\s+", "");
@@ -519,6 +555,8 @@ public class KeePassActivity extends android.app.Activity {
         EditText tTitle = field(form, R.string.kp_entry_title, existing != null ? existing.getTitle() : "");
         EditText tUser = field(form, R.string.kp_entry_user, existing != null ? existing.getUserName() : "");
         EditText tPass = field(form, R.string.kp_entry_pass, existing != null ? existing.getPassword() : "");
+        tPass.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        PasswordVisibility.attach(tPass);
         tPass.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
         EditText tUrl = field(form, R.string.kp_entry_url, existing != null ? existing.getUrl() : "");
         EditText tNotes = field(form, R.string.kp_entry_notes, existing != null ? existing.getNotes() : "");
