@@ -1,0 +1,1 @@
+KeePass emergency key: verify a .kdbx password, encode the 256-bit composite key as kanji, reopen without the password. Create KDBX4 (AES/ChaCha20 + Argon2id). Vendored kotpass (MIT).

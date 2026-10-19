@@ -1,0 +1,1 @@
+KeePass緊急鍵: .kdbxのパスワードを検証して合成鍵(256bit)を漢字色キーで表示。緊急鍵だけで再オープン可。KDBX4新規作成(AES/ChaCha20+Argon2id)。kotpass(MIT)同梱。
