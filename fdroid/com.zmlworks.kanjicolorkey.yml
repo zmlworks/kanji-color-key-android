@@ -53,7 +53,7 @@ Builds:
 
   - versionName: 0.4.2
     versionCode: 6
-    commit: PLACEHOLDER
+    commit: ae0ff1e
     subdir: app
     gradle:
       - yes
