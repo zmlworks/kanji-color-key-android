@@ -67,16 +67,31 @@ public class KeePassActivity extends android.app.Activity {
 
     @Override
     protected void attachBaseContext(android.content.Context base) {
-        String t = new Settings(base).theme();
-        if (Settings.THEME_LIGHT.equals(t))
-            base.getResources().getConfiguration().uiMode =
-                    (base.getResources().getConfiguration().uiMode & ~android.content.res.Configuration.UI_MODE_NIGHT_MASK)
-                            | android.content.res.Configuration.UI_MODE_NIGHT_NO;
-        else if (Settings.THEME_DARK.equals(t))
-            base.getResources().getConfiguration().uiMode =
-                    (base.getResources().getConfiguration().uiMode & ~android.content.res.Configuration.UI_MODE_NIGHT_MASK)
-                            | android.content.res.Configuration.UI_MODE_NIGHT_YES;
         super.attachBaseContext(base);
+        Themes.override(this, base);
+    }
+
+    private boolean shownNight;
+    private int currentPanel;
+
+    @Override
+    public void onConfigurationChanged(android.content.res.Configuration c) {
+        super.onConfigurationChanged(c);
+        if (Themes.systemNightChanged(this, c, shownNight)) recreateKeepingState();
+    }
+
+    /** RAM-only hand-over of an open database across a theme recreate(); never saved to disk or the saved state. */
+    static final class Carry {
+        KeePassDatabase db; byte[] comp; boolean ro; Uri openUri; int panel; CharSequence status;
+        static Carry pending;
+    }
+
+    void recreateKeepingState() {
+        Carry c = new Carry();
+        c.db = openDb; c.comp = openComposite != null ? openComposite.clone() : null; c.ro = readOnly;
+        c.openUri = openUri; c.panel = currentPanel; c.status = status != null ? status.getText() : null;
+        Carry.pending = c;
+        recreate();
     }
 
     @Override
@@ -85,6 +100,7 @@ public class KeePassActivity extends android.app.Activity {
         applySecureFlags();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_keepass);
+        shownNight = Themes.isNight(this);
 
         status = findViewById(R.id.status);
         panelEmergency = findViewById(R.id.panelEmergency);
@@ -125,6 +141,7 @@ public class KeePassActivity extends android.app.Activity {
         RamStoreUi.bind(this);
 
         findViewById(R.id.bBack).setOnClickListener(v -> finish());
+        findViewById(R.id.bSettings).setOnClickListener(v -> settingsDialog = SettingsDialog.show(this, this::recreateKeepingState));
         findViewById(R.id.tabEmergency).setOnClickListener(v -> showPanel(0));
         findViewById(R.id.tabOpen).setOnClickListener(v -> showPanel(1));
         findViewById(R.id.tabCreate).setOnClickListener(v -> showPanel(2));
@@ -194,17 +211,31 @@ public class KeePassActivity extends android.app.Activity {
         } else if (useStore && handed != null) {
             showPanel(1);
         } else showPanel(0);
+        Carry c = Carry.pending;
+        Carry.pending = null;
+        if (c != null) {
+            if (c.openUri != null) openUri = c.openUri;
+            if (c.db != null) {
+                openDb = c.db; openComposite = c.comp; readOnly = c.ro;
+                tabBrowse.setEnabled(true);
+                bAddEntry.setEnabled(!readOnly);
+                bSaveDb.setEnabled(!readOnly && openUri != null);
+            } else wipe(c.comp);
+            showPanel(c.panel == 3 && openDb == null ? 0 : c.panel);
+            if (c.status != null) status.setText(c.status);
+        }
         RamStoreUi.refresh(this);
     }
 
+    private AlertDialog settingsDialog;
+    AlertDialog shownSettingsDialog() { return settingsDialog; }
+
     private void applySecureFlags() {
-        if (settings.blockScreenshots())
-            getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
-        if (settings.keepScreenOn())
-            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        Themes.applyWindowFlags(this);
     }
 
     private void showPanel(int which) {
+        currentPanel = which;
         panelEmergency.setVisibility(which == 0 ? View.VISIBLE : View.GONE);
         panelOpen.setVisibility(which == 1 ? View.VISIBLE : View.GONE);
         panelCreate.setVisibility(which == 2 ? View.VISIBLE : View.GONE);

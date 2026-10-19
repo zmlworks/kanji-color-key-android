@@ -12,49 +12,60 @@
             android:text="@string/kp_back" android:textAllCaps="false" />
         <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
             android:text="@string/restore_title" android:textSize="18sp" android:textStyle="bold"
-            android:paddingStart="8dp" android:textColor="@color/text" />
+            android:paddingStart="8dp" android:textColor="@color/text" android:maxLines="1"
+            android:ellipsize="end" />
+        <Button android:id="@+id/bSettings" style="?android:attr/borderlessButtonStyle"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="@string/settings_gear" android:textAllCaps="false" android:textSize="16sp"
+            android:textColor="@color/text" />
     </LinearLayout>
 
     <include layout="@layout/ram_store_bar" />
 
-    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:text="@string/restore_help_v2" android:textSize="12sp" android:textColor="@color/dim"
-        android:padding="8dp" />
-
-    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:orientation="horizontal" android:paddingHorizontal="8dp" android:gravity="center_vertical">
-        <CheckBox android:id="@+id/cbKf" android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="@string/restore_kf" />
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="@string/restore_bits" android:textColor="@color/text" android:paddingStart="8dp" />
-        <EditText android:id="@+id/dataBits" android:layout_width="64dp" android:layout_height="wrap_content"
-            android:inputType="number" android:text="256" android:saveEnabled="false" />
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="@string/restore_check" android:textColor="@color/text" android:paddingStart="6dp" />
-        <EditText android:id="@+id/checkBits" android:layout_width="48dp" android:layout_height="wrap_content"
-            android:inputType="number" android:text="0" android:saveEnabled="false" />
-    </LinearLayout>
-
-    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:text="@string/restore_mismatch" android:textColor="@color/text" android:paddingHorizontal="8dp" />
-    <RadioGroup android:id="@+id/mismatchDepth" android:layout_width="match_parent"
-        android:layout_height="wrap_content" android:orientation="horizontal" android:paddingHorizontal="8dp">
-        <RadioButton android:id="@+id/mismatch0" android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="@string/restore_mismatch_0" android:checked="true" />
-        <RadioButton android:id="@+id/mismatch1" android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="@string/restore_mismatch_1" />
-        <RadioButton android:id="@+id/mismatch2" android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="@string/restore_mismatch_2" />
-    </RadioGroup>
-
     <ScrollView android:id="@+id/blockScroll" android:layout_width="match_parent"
         android:layout_height="0dp" android:layout_weight="1">
-        <LinearLayout android:id="@+id/blockList" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:orientation="vertical" android:padding="8dp" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView android:id="@+id/helpText" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:text="@string/restore_help_v2"
+                android:textSize="12sp" android:textColor="@color/dim" android:padding="8dp" />
+
+            <CheckBox android:id="@+id/cbKf" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:layout_marginHorizontal="8dp"
+                android:text="@string/restore_kf" android:textColor="@color/text" />
+
+            <LinearLayout android:id="@+id/bitsRow" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:orientation="horizontal"
+                android:paddingHorizontal="8dp" android:gravity="center_vertical">
+                <TextView android:id="@+id/labelDataBits" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:text="@string/restore_bits"
+                    android:textColor="@color/text" android:maxLines="1" />
+                <EditText android:id="@+id/dataBits" android:layout_width="80dp"
+                    android:layout_height="wrap_content" android:layout_marginStart="6dp"
+                    android:inputType="number" android:text="256" android:saveEnabled="false"
+                    android:maxLines="1" android:importantForAutofill="no" />
+                <TextView android:id="@+id/labelCheckBits" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:layout_marginStart="16dp"
+                    android:text="@string/restore_check" android:textColor="@color/text" android:maxLines="1" />
+                <EditText android:id="@+id/checkBits" android:layout_width="64dp"
+                    android:layout_height="wrap_content" android:layout_marginStart="6dp"
+                    android:inputType="number" android:text="0" android:saveEnabled="false"
+                    android:maxLines="1" android:importantForAutofill="no" />
+            </LinearLayout>
+
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:text="@string/restore_mismatch_auto" android:textSize="12sp"
+                android:textColor="@color/dim" android:paddingHorizontal="8dp" android:paddingTop="4dp" />
+
+            <LinearLayout android:id="@+id/blockList" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:orientation="vertical" android:padding="8dp" />
+        </LinearLayout>
     </ScrollView>
 
-    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:orientation="horizontal" android:padding="8dp" android:gravity="center">
+    <LinearLayout android:id="@+id/editButtons" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:orientation="horizontal" android:padding="8dp"
+        android:gravity="center">
         <Button android:id="@+id/bAddChar" android:layout_width="wrap_content" android:layout_height="wrap_content"
             android:text="@string/restore_add_char" android:textAllCaps="false" />
         <Button android:id="@+id/bFinish" android:layout_width="wrap_content" android:layout_height="wrap_content"

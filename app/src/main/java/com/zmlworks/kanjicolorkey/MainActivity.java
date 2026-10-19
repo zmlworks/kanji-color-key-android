@@ -747,63 +747,7 @@ public class MainActivity extends Activity {
 
     // ---------- dialogs ----------
     private void showSettings() {
-        LinearLayout box = new LinearLayout(this);
-        box.setOrientation(LinearLayout.VERTICAL);
-        box.setPadding(dp(20), dp(8), dp(20), dp(4));
-        box.addView(label(R.string.set_security));
-        int[] labels = {R.string.set_screenshots, R.string.set_wipe, R.string.set_keep_screen, R.string.set_clip_clear};
-        boolean[] on = {settings.blockScreenshots(), settings.wipeOnBackground(), settings.keepScreenOn(), settings.clipClear()};
-        for (int i = 0; i < labels.length; i++) {
-            final int which = i;
-            CheckBox cb = new CheckBox(this);
-            cb.setText(labels[i]);
-            cb.setChecked(on[i]);
-            cb.setTextSize(15);
-            cb.setPadding(dp(8), dp(10), 0, dp(10));
-            cb.setOnCheckedChangeListener((b, checked) -> {
-                if (which == 0) settings.setBlockScreenshots(checked);
-                else if (which == 1) settings.setWipeOnBackground(checked);
-                else if (which == 2) settings.setKeepScreenOn(checked);
-                else settings.setClipClear(checked);
-                applyWindowFlags();
-            });
-            box.addView(cb);
-        }
-        box.addView(label(R.string.set_theme));
-        RadioGroup rg = new RadioGroup(this);
-        String[] themes = {Settings.THEME_SYSTEM, Settings.THEME_LIGHT, Settings.THEME_DARK};
-        int[] tl = {R.string.theme_system, R.string.theme_light, R.string.theme_dark};
-        for (int i = 0; i < 3; i++) {
-            RadioButton rb = new RadioButton(this);
-            rb.setId(View.generateViewId());
-            rb.setText(tl[i]);
-            rb.setTextSize(15);
-            rb.setTag(themes[i]);
-            rg.addView(rb);
-            if (themes[i].equals(settings.theme())) rg.check(rb.getId());
-        }
-        rg.setOnCheckedChangeListener((group, id) -> {
-            String t = (String) group.findViewById(id).getTag();
-            if (t.equals(settings.theme())) return;
-            settings.setTheme(t);
-            if (dialog != null) { dialog.dismiss(); dialog = null; }
-            recreateKeepingState();
-        });
-        box.addView(rg);
-        TextView note = new TextView(this);
-        note.setText(R.string.set_note);
-        note.setTextSize(13);
-        note.setTextColor(color(R.color.dim));
-        note.setPadding(0, dp(8), 0, dp(4));
-        box.addView(note);
-        ScrollView sv = new ScrollView(this);
-        sv.addView(box);
-        dialog = new AlertDialog.Builder(this)
-                .setTitle(R.string.settings)
-                .setView(sv)
-                .setPositiveButton(R.string.close, null)
-                .create();
-        dialog.show();
+        dialog = SettingsDialog.show(this, () -> { dialog = null; recreateKeepingState(); });
     }
 
     private TextView label(int res) {

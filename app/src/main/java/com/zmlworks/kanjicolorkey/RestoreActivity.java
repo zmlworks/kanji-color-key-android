@@ -6,7 +6,12 @@ import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.app.AlertDialog;
 import android.text.Editable;
+import android.text.SpanWatcher;
+import android.text.Spannable;
+import android.view.inputmethod.BaseInputConnection;
+import android.view.inputmethod.EditorInfo;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextWatcher;
@@ -16,13 +21,11 @@ import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
-import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -54,11 +57,13 @@ public class RestoreActivity extends Activity {
     private View blockScroll, panelResults;
     private EditText dataBits, checkBits;
     private CheckBox cbKf;
-    private RadioGroup mismatchDepth;
     private TextView status;
     private Button bFinish;
 
+    static final int DEFAULT_BLOCKS = 5;
     private final List<BlockHolder> blocks = new ArrayList<>();
+    private boolean shownNight;
+    private AlertDialog askDialog;
     private byte[] kdbxBytes;
     private boolean fromKeepass;
     private boolean suppress;
@@ -66,37 +71,33 @@ public class RestoreActivity extends Activity {
     static final class BlockHolder {
         View root;
         EditText charIn;
-        TextView blockErr, colorNames;
-        FrameLayout sampleBox;
-        View sampleRow;
-        FlickColorView flick;
-        Button bDelete;
+        TextView blockErr, colorNames, blockNo;
+        FlickSurfaceLayout sampleBox;
+        View sampleRow, fallbackRow;
+        Button bDelete, bFallback;
         GlyphStrokes glyph;
-        int[] colors = new int[0]; // 0..3 or -1; -2 = empty
+        int[] colors = new int[0]; // 0..3 or -1 (?); -2 = not entered yet
         int si;
         TextWatcher watcher;
+        SpanWatcher composingWatcher;
     }
 
     @Override protected void attachBaseContext(android.content.Context base) {
         super.attachBaseContext(base);
-        String th = new Settings(base).theme();
-        if (Settings.THEME_SYSTEM.equals(th)) return;
-        android.content.res.Configuration c = new android.content.res.Configuration();
-        c.fontScale = 0;
-        int night = Settings.THEME_DARK.equals(th)
-                ? android.content.res.Configuration.UI_MODE_NIGHT_YES
-                : android.content.res.Configuration.UI_MODE_NIGHT_NO;
-        c.uiMode = (base.getResources().getConfiguration().uiMode
-                & ~android.content.res.Configuration.UI_MODE_NIGHT_MASK) | night;
-        applyOverrideConfiguration(c);
+        Themes.override(this, base);
+    }
+
+    @Override public void onConfigurationChanged(android.content.res.Configuration c) {
+        super.onConfigurationChanged(c);
+        if (Themes.systemNightChanged(this, c, shownNight)) { saveDraft(); recreate(); }
     }
 
     @Override protected void onCreate(Bundle savedInstanceState) {
         settings = new Settings(this);
-        if (settings.blockScreenshots()) getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
-        if (settings.keepScreenOn()) getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        Themes.applyWindowFlags(this);
         super.onCreate(null); // never restore secrets from saved state
         setContentView(R.layout.activity_restore);
+        shownNight = Themes.isNight(this);
         RamStoreUi.bind(this);
 
         blockList = findViewById(R.id.blockList);
@@ -106,7 +107,6 @@ public class RestoreActivity extends Activity {
         dataBits = findViewById(R.id.dataBits);
         checkBits = findViewById(R.id.checkBits);
         cbKf = findViewById(R.id.cbKf);
-        mismatchDepth = findViewById(R.id.mismatchDepth);
         status = findViewById(R.id.status);
         bFinish = findViewById(R.id.bFinish);
 
@@ -118,7 +118,14 @@ public class RestoreActivity extends Activity {
             saveDraft();
             finish();
         });
-        findViewById(R.id.bAddChar).setOnClickListener(v -> addBlock(""));
+        findViewById(R.id.bAddChar).setOnClickListener(v -> {
+            BlockHolder h = addBlock("", -1);
+            h.charIn.requestFocus();
+        });
+        findViewById(R.id.bSettings).setOnClickListener(v -> askDialog = SettingsDialog.show(this, () -> {
+            saveDraft();
+            recreate();
+        }));
         bFinish.setOnClickListener(v -> finishAndDecode());
 
         cbKf.setOnCheckedChangeListener((b, on) -> {
@@ -184,87 +191,159 @@ public class RestoreActivity extends Activity {
             dataBits.setText(String.valueOf(RamKeyStore.get().restoreDataBits()));
             checkBits.setText(String.valueOf(RamKeyStore.get().restoreCheckBits()));
             cbKf.setChecked(RamKeyStore.get().restoreKf());
-            int d = RamKeyStore.get().restoreMismatchDepth();
-            if (d == 1) mismatchDepth.check(R.id.mismatch1);
-            else if (d == 2) mismatchDepth.check(R.id.mismatch2);
-            else mismatchDepth.check(R.id.mismatch0);
         }
         suppress = false;
         blockList.removeAllViews();
         blocks.clear();
-        if (draft.isEmpty()) addBlock("");
-        else for (RamKeyStore.RestoreBlock b : draft) {
-            BlockHolder h = addBlock(b.ch);
+        for (RamKeyStore.RestoreBlock b : draft) {
+            BlockHolder h = addBlock(b.ch, -1);
             if (b.colors != null && b.colors.length > 0 && h.glyph != null
                     && b.colors.length == h.glyph.colorSlots) {
                 h.colors = b.colors.clone();
-                h.si = firstEmpty(h.colors);
+                h.si = clampSi(h, firstEmpty(h.colors));
                 refreshSample(h);
                 refreshColorNames(h);
             }
         }
+        while (blocks.size() < DEFAULT_BLOCKS) addBlock("", -1);
         updateFinishEnabled();
         RamStoreUi.refresh(this);
     }
 
-    private BlockHolder addBlock(String initialChar) {
+    /** Adds a block at {@code index} (-1 = end). */
+    private BlockHolder addBlock(String initialChar, int index) {
         View root = LayoutInflater.from(this).inflate(R.layout.item_restore_char, blockList, false);
         BlockHolder h = new BlockHolder();
         h.root = root;
         h.charIn = root.findViewById(R.id.charIn);
         h.blockErr = root.findViewById(R.id.blockErr);
+        h.blockNo = root.findViewById(R.id.blockNo);
         h.sampleBox = root.findViewById(R.id.sampleBox);
         h.sampleRow = root.findViewById(R.id.sampleRow);
+        h.fallbackRow = root.findViewById(R.id.fallbackRow);
         h.colorNames = root.findViewById(R.id.colorNames);
-        h.flick = root.findViewById(R.id.flick);
         h.bDelete = root.findViewById(R.id.bDeleteBlock);
-        boolean night = (getResources().getConfiguration().uiMode
-                & android.content.res.Configuration.UI_MODE_NIGHT_MASK)
-                == android.content.res.Configuration.UI_MODE_NIGHT_YES;
-        h.flick.setPalette(night ? Kck.COLOR_ARGB_DARK : Kck.COLOR_ARGB, Kck.COLORS);
-        h.flick.setListener(color -> onFlick(h, color));
+        h.bFallback = root.findViewById(R.id.bFallback);
+        int[] palette = Themes.palette(this);
+        h.sampleBox.setPalette(palette, Kck.COLORS);
+        h.sampleBox.setListener(color -> onFlick(h, color));
+        int[] fb = {R.id.fb0, R.id.fb1, R.id.fb2, R.id.fb3, R.id.fbQ};
+        for (int i = 0; i < fb.length; i++) {
+            final int color = i < 4 ? i : -1;
+            Button b = root.findViewById(fb[i]);
+            if (i < 4) b.setTextColor(palette[i]);
+            b.setOnClickListener(v -> onFlick(h, color));
+        }
+        h.bFallback.setOnClickListener(v -> h.fallbackRow.setVisibility(
+                h.fallbackRow.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE));
         h.bDelete.setOnClickListener(v -> {
             if (blocks.size() <= 1) {
-                h.charIn.setText("");
+                setCharSilently(h, "");
                 clearGlyph(h);
                 return;
             }
             blockList.removeView(h.root);
             blocks.remove(h);
+            renumber();
             updateFinishEnabled();
             saveDraft();
         });
+        h.composingWatcher = new SpanWatcher() {
+            @Override public void onSpanAdded(Spannable text, Object what, int start, int end) { }
+            @Override public void onSpanChanged(Spannable text, Object what, int os, int oe, int ns, int ne) { }
+            @Override public void onSpanRemoved(Spannable text, Object what, int start, int end) {
+                // composition finished without a text change (e.g. the IME just "confirmed" it)
+                main.post(() -> { if (!isComposing(h.charIn.getText())) commitChars(h); });
+            }
+        };
         h.watcher = new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int a, int b, int c) { }
             @Override public void onTextChanged(CharSequence s, int a, int b, int c) { }
             @Override public void afterTextChanged(Editable s) {
                 if (suppress) return;
-                // keep first code point only
-                String t = s.toString();
-                if (t.codePointCount(0, t.length()) > 1) {
-                    int cp = t.codePointAt(0);
-                    String one = new String(Character.toChars(cp));
-                    suppress = true;
-                    h.charIn.setText(one);
-                    h.charIn.setSelection(one.length());
-                    suppress = false;
-                    onCharChanged(h, true);
+                if (isComposing(s)) {
+                    // IME is still converting (e.g. あさ → 朝): do not take the reading as the character
+                    if (s.getSpans(0, s.length(), SpanWatcher.class).length == 0
+                            || !Arrays.asList(s.getSpans(0, s.length(), SpanWatcher.class)).contains(h.composingWatcher))
+                        s.setSpan(h.composingWatcher, 0, s.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
                     return;
                 }
-                onCharChanged(h, true);
+                commitChars(h);
             }
         };
         h.charIn.addTextChangedListener(h.watcher);
-        blockList.addView(root);
-        blocks.add(h);
+        h.charIn.setOnFocusChangeListener((v, has) -> { if (!has) commitChars(h); });
+        h.charIn.setOnEditorActionListener((v, actionId, ev) -> {
+            commitChars(h);
+            int i = blocks.indexOf(h);
+            if (i >= 0 && i + 1 < blocks.size()) { blocks.get(i + 1).charIn.requestFocus(); return true; }
+            return false;
+        });
+        if (index < 0 || index > blocks.size()) index = blocks.size();
+        blockList.addView(root, index);
+        blocks.add(index, h);
+        renumber();
         if (initialChar != null && !initialChar.isEmpty()) {
-            suppress = true;
-            h.charIn.setText(initialChar);
-            suppress = false;
+            setCharSilently(h, initialChar);
             onCharChanged(h, false);
         }
         updateFinishEnabled();
         return h;
+    }
+
+    private void renumber() {
+        for (int i = 0; i < blocks.size(); i++) blocks.get(i).blockNo.setText(String.valueOf(i + 1));
+    }
+
+    static boolean isComposing(CharSequence s) {
+        if (!(s instanceof Spannable)) return false;
+        Spannable sp = (Spannable) s;
+        return BaseInputConnection.getComposingSpanStart(sp) != -1
+                || BaseInputConnection.getComposingSpanEnd(sp) != -1;
+    }
+
+    private void setCharSilently(BlockHolder h, String s) {
+        boolean old = suppress;
+        suppress = true;
+        h.charIn.setText(s);
+        h.charIn.setSelection(h.charIn.getText().length());
+        suppress = old;
+    }
+
+    /**
+     * Takes the committed text of a block: the first character stays here, any further characters
+     * (pasted, or several committed at once by the IME) go into the following blocks — into the next
+     * empty block, else a new block is inserted.
+     */
+    void commitChars(BlockHolder h) {
+        if (suppress || poolData == null || !blocks.contains(h)) return;
+        Editable e = h.charIn.getText();
+        if (isComposing(e)) return;
+        String raw = e.toString().replaceAll("\\s+", "");
+        if (raw.isEmpty()) {
+            if (e.length() > 0) setCharSilently(h, "");
+            if (h.glyph != null) clearGlyph(h);
+            else h.blockErr.setText("");
+            return;
+        }
+        int[] cps = raw.codePoints().toArray();
+        String first = new String(Character.toChars(cps[0]));
+        if (!first.equals(e.toString())) setCharSilently(h, first);
+        onCharChanged(h, true);
+        int at = blocks.indexOf(h);
+        for (int k = 1; k < cps.length; k++) {
+            String ch = new String(Character.toChars(cps[k]));
+            int next = at + 1;
+            if (next < blocks.size() && blocks.get(next).charIn.getText().length() == 0) {
+                BlockHolder n = blocks.get(next);
+                setCharSilently(n, ch);
+                onCharChanged(n, true);
+            } else {
+                addBlock(ch, next);
+            }
+            at = next;
+        }
+        if (cps.length > 1 && at + 1 < blocks.size()) blocks.get(at + 1).charIn.requestFocus();
     }
 
     private void clearGlyph(BlockHolder h) {
@@ -272,7 +351,8 @@ public class RestoreActivity extends Activity {
         h.colors = new int[0];
         h.si = 0;
         h.sampleRow.setVisibility(View.GONE);
-        h.flick.setVisibility(View.GONE);
+        h.fallbackRow.setVisibility(View.GONE);
+        h.bFallback.setVisibility(View.GONE);
         h.blockErr.setText("");
         h.colorNames.setText("");
         updateFinishEnabled();
@@ -281,7 +361,7 @@ public class RestoreActivity extends Activity {
 
     private void onCharChanged(BlockHolder h, boolean resetIfStrokeCountChanges) {
         if (poolData == null) return;
-        String raw = h.charIn.getText().toString();
+        String raw = h.charIn.getText().toString().trim();
         if (raw.isEmpty()) { clearGlyph(h); return; }
         String ch = new String(Character.toChars(raw.codePointAt(0)));
         GlyphStrokes g = GlyphStrokes.resolve(poolData, kanaData, ch, cbKf.isChecked());
@@ -309,7 +389,7 @@ public class RestoreActivity extends Activity {
             h.si = 0;
         }
         h.sampleRow.setVisibility(View.VISIBLE);
-        h.flick.setVisibility(View.VISIBLE);
+        h.bFallback.setVisibility(View.VISIBLE);
         refreshSample(h);
         refreshColorNames(h);
         updateFinishEnabled();
@@ -318,15 +398,20 @@ public class RestoreActivity extends Activity {
 
     private void onFlick(BlockHolder h, int color) {
         if (h.glyph == null || h.colors.length == 0) return;
-        if (h.si < 0 || h.si >= h.colors.length) h.si = firstEmpty(h.colors);
-        if (h.si >= h.colors.length) h.si = h.colors.length - 1;
+        h.si = clampSi(h, h.si);
         h.colors[h.si] = color;
-        h.si = firstEmpty(h.colors);
-        if (h.si >= h.colors.length) h.si = h.colors.length - 1;
+        int nx = firstEmpty(h.colors);
+        // after the last empty stroke, stay on the last one (re-flick to correct)
+        h.si = nx < h.colors.length ? nx : Math.min(h.si + 1, h.colors.length - 1);
         refreshSample(h);
         refreshColorNames(h);
         updateFinishEnabled();
         saveDraft();
+    }
+
+    private static int clampSi(BlockHolder h, int si) {
+        if (h.colors.length == 0) return 0;
+        return Math.max(0, Math.min(si, h.colors.length - 1));
     }
 
     private static int firstEmpty(int[] colors) {
@@ -337,10 +422,7 @@ public class RestoreActivity extends Activity {
     private void refreshSample(BlockHolder h) {
         h.sampleBox.removeAllViews();
         if (h.glyph == null) return;
-        boolean night = (getResources().getConfiguration().uiMode
-                & android.content.res.Configuration.UI_MODE_NIGHT_MASK)
-                == android.content.res.Configuration.UI_MODE_NIGHT_YES;
-        int[] palette = night ? Kck.COLOR_ARGB_DARK : Kck.COLOR_ARGB;
+        int[] palette = Themes.palette(this);
         GlyphStrokes g = h.glyph;
         if (g.kind == GlyphStrokes.Kind.ALPHA) {
             TextView big = new TextView(this);
@@ -369,10 +451,7 @@ public class RestoreActivity extends Activity {
 
     private void refreshColorNames(BlockHolder h) {
         if (h.glyph == null) { h.colorNames.setText(""); return; }
-        boolean night = (getResources().getConfiguration().uiMode
-                & android.content.res.Configuration.UI_MODE_NIGHT_MASK)
-                == android.content.res.Configuration.UI_MODE_NIGHT_YES;
-        int[] palette = night ? Kck.COLOR_ARGB_DARK : Kck.COLOR_ARGB;
+        int[] palette = Themes.palette(this);
         SpannableStringBuilder sb = new SpannableStringBuilder();
         int perLine = 5;
         for (int i = 0; i < h.colors.length; i++) {
@@ -406,49 +485,79 @@ public class RestoreActivity extends Activity {
         h.colorNames.setMovementMethod(LinkMovementMethod.getInstance());
     }
 
-    private boolean allBlocksReady() {
-        if (blocks.isEmpty()) return false;
-        for (BlockHolder h : blocks) {
-            if (h.glyph == null) return false;
-            for (int c : h.colors) if (c == -2) return false;
-        }
-        return true;
+    private boolean anyCharEntered() {
+        for (BlockHolder h : blocks) if (h.charIn.getText().toString().trim().length() > 0) return true;
+        return false;
     }
 
     private void updateFinishEnabled() {
-        bFinish.setEnabled(allBlocksReady() && poolData != null);
+        bFinish.setEnabled(poolData != null && anyCharEntered());
     }
 
     private void saveDraft() {
+        if (dataBits == null) return;
         List<RamKeyStore.RestoreBlock> list = new ArrayList<>();
         for (BlockHolder h : blocks) {
             RamKeyStore.RestoreBlock b = new RamKeyStore.RestoreBlock();
-            b.ch = h.charIn.getText().toString();
+            b.ch = h.charIn.getText().toString().trim();
             if (!b.ch.isEmpty()) b.ch = new String(Character.toChars(b.ch.codePointAt(0)));
             b.colors = h.colors != null ? h.colors.clone() : new int[0];
             b.kf = cbKf.isChecked();
             list.add(b);
         }
-        int depth = 0;
-        if (mismatchDepth.getCheckedRadioButtonId() == R.id.mismatch1) depth = 1;
-        else if (mismatchDepth.getCheckedRadioButtonId() == R.id.mismatch2) depth = 2;
         RamKeyStore.get().setRestoreDraft(list, parseInt(dataBits.getText().toString(), 256),
-                parseInt(checkBits.getText().toString(), 0), cbKf.isChecked(), depth);
+                parseInt(checkBits.getText().toString(), 0), cbKf.isChecked(), 0);
         RamStoreUi.refresh(this);
     }
 
-    private String buildDecodeText() {
+    /** What "完了" will decode, or why it can't. Never throws. */
+    static final class Plan {
+        String text;           // null when not decodable
+        String error;          // user-facing reason when text == null
+        int skippedEmpty;      // empty blocks ignored
+        int unfilledAsQ;       // strokes without a color, sent as '?'
+    }
+
+    Plan buildPlan() {
+        Plan p = new Plan();
+        List<BlockHolder> used = new ArrayList<>();
+        List<String> unknown = new ArrayList<>();
+        for (BlockHolder h : blocks) {
+            String raw = h.charIn.getText().toString().trim();
+            if (raw.isEmpty()) { p.skippedEmpty++; continue; }
+            if (h.glyph == null) onCharChanged(h, false); // e.g. text that never got committed
+            if (h.glyph == null) { unknown.add(raw); continue; }
+            used.add(h);
+        }
+        // trailing empties are expected (5 blocks by default) – only count the ones in between
+        int lastUsed = -1;
+        for (int i = 0; i < blocks.size(); i++)
+            if (blocks.get(i).charIn.getText().toString().trim().length() > 0) lastUsed = i;
+        p.skippedEmpty = 0;
+        for (int i = 0; i < lastUsed; i++)
+            if (blocks.get(i).charIn.getText().toString().trim().isEmpty()) p.skippedEmpty++;
+        if (!unknown.isEmpty()) {
+            p.error = getString(R.string.restore_unknown_abort, String.join(" ", unknown));
+            return p;
+        }
+        if (used.isEmpty()) { p.error = getString(R.string.restore_need_one); return p; }
+        for (BlockHolder h : used) for (int c : h.colors) if (c == -2) p.unfilledAsQ++;
+        p.text = buildDecodeText(used);
+        return p;
+    }
+
+    private String buildDecodeText(List<BlockHolder> used) {
         int db = parseInt(dataBits.getText().toString(), 256);
         int cb = parseInt(checkBits.getText().toString(), 0);
         boolean allAlpha = true, allKana = true;
-        for (BlockHolder h : blocks) {
+        for (BlockHolder h : used) {
             if (h.glyph.kind != GlyphStrokes.Kind.ALPHA) allAlpha = false;
             if (h.glyph.kind != GlyphStrokes.Kind.KANA) allKana = false;
         }
         boolean kf = allKana && cbKf.isChecked();
         StringBuilder body = new StringBuilder();
-        for (int i = 0; i < blocks.size(); i++) {
-            BlockHolder h = blocks.get(i);
+        for (int i = 0; i < used.size(); i++) {
+            BlockHolder h = used.get(i);
             GlyphStrokes g = h.glyph;
             if (kf && i > 0) body.append(' ');
             body.append(g.ch);
@@ -465,147 +574,163 @@ public class RestoreActivity extends Activity {
         try { return Integer.parseInt(s.trim()); } catch (Exception e) { return def; }
     }
 
-    private int selectedMismatchDepth() {
-        int id = mismatchDepth.getCheckedRadioButtonId();
-        if (id == R.id.mismatch1) return 1;
-        if (id == R.id.mismatch2) return 2;
-        return 0;
-    }
-
     private void showResults(boolean show) {
         panelResults.setVisibility(show ? View.VISIBLE : View.GONE);
         blockScroll.setVisibility(show ? View.GONE : View.VISIBLE);
-        findViewById(R.id.bAddChar).setVisibility(show ? View.GONE : View.VISIBLE);
-        bFinish.setVisibility(show ? View.GONE : View.VISIBLE);
+        findViewById(R.id.editButtons).setVisibility(show ? View.GONE : View.VISIBLE);
     }
 
-    private void finishAndDecode() {
-        if (!allBlocksReady()) {
-            Toast.makeText(this, R.string.restore_need_fill, Toast.LENGTH_SHORT).show();
+    void finishAndDecode() {
+        for (BlockHolder h : blocks) if (!isComposing(h.charIn.getText())) commitChars(h);
+        Plan plan;
+        try { plan = buildPlan(); }
+        catch (Exception e) { plan = new Plan(); plan.error = String.valueOf(e.getMessage()); }
+        if (plan.text == null) {
+            status.setText(plan.error);
+            Toast.makeText(this, plan.error, Toast.LENGTH_LONG).show();
             return;
         }
         saveDraft();
-        final String text = buildDecodeText();
+        final String text = plan.text;
         showResults(true);
         resultsBox.removeAllViews();
-        TextView spec = new TextView(this);
-        spec.setTypeface(Typeface.MONOSPACE);
-        spec.setTextColor(getColor(R.color.text));
-        spec.setText(text);
-        spec.setTextIsSelectable(true);
-        resultsBox.addView(spec);
-        Button go = new Button(this);
-        go.setAllCaps(false);
-        go.setText(kdbxBytes != null ? R.string.restore_decode_kdbx : R.string.restore_decode);
-        go.setOnClickListener(v -> runDecode(text, kdbxBytes != null));
-        resultsBox.addView(go);
-        if (selectedMismatchDepth() > 0) {
-            TextView mi = new TextView(this);
-            mi.setTextColor(getColor(R.color.dim));
-            mi.setText(getString(R.string.restore_mismatch_estimate,
-                    ColorMismatch.estimateVariantCount(text, selectedMismatchDepth()),
-                    selectedMismatchDepth()));
-            resultsBox.addView(mi);
-        }
-        runDecode(text, kdbxBytes != null);
+        StringBuilder notes = new StringBuilder();
+        if (plan.skippedEmpty > 0) notes.append(getString(R.string.restore_skipped_empty, plan.skippedEmpty)).append('\n');
+        if (plan.unfilledAsQ > 0) notes.append(getString(R.string.restore_unfilled_as_q, plan.unfilledAsQ)).append('\n');
+        notes.append(kdbxBytes != null
+                ? getString(R.string.restore_kdbx_attach, RamKeyStore.get().kdbxName() != null
+                        ? RamKeyStore.get().kdbxName() : getString(R.string.kp_file_handoff))
+                : getString(R.string.restore_kdbx_none_held));
+        lastNotes = notes.toString();
+        lastText = text;
+        startPass(text, 0, null);
     }
 
-    private void runDecode(String text, boolean withKdbx) {
+    private String lastNotes = "", lastText;
+    private RestoreSearch.Result lastDepth1;
+
+    private TextView addLine(CharSequence s, int colorRes, boolean mono) {
+        TextView v = new TextView(this);
+        v.setText(s);
+        v.setTextColor(getColor(colorRes));
+        if (mono) { v.setTypeface(Typeface.MONOSPACE); v.setTextIsSelectable(true); }
+        v.setPadding(0, 4, 0, 4);
+        resultsBox.addView(v);
+        return v;
+    }
+
+    /** Runs one depth; exact (0) → automatically 1 → ask before 2. */
+    private void startPass(String text, int depth, String banner) {
         cancelDecode.set(false);
-        status.setText(withKdbx ? R.string.restore_kdbx_trying : R.string.decoding);
+        resultsBox.removeAllViews();
+        addLine(text, R.color.text, true);
+        addLine(lastNotes, R.color.dim, false);
+        if (banner != null) addLine(banner, R.color.text, false);
+        TextView prog = addLine("", R.color.dim, false);
         Button cancel = new Button(this);
         cancel.setAllCaps(false);
         cancel.setText(android.R.string.cancel);
         cancel.setOnClickListener(v -> cancelDecode.set(true));
         resultsBox.addView(cancel);
-        TextView prog = new TextView(this);
-        prog.setTextColor(getColor(R.color.dim));
-        resultsBox.addView(prog);
+        status.setText(kdbxBytes != null ? R.string.restore_kdbx_trying : R.string.decoding);
         final Kck.Options opts = new Kck.Options(kanaData.set);
-        final byte[] db = withKdbx ? kdbxBytes : null;
-        final int depth = selectedMismatchDepth();
+        final byte[] db = kdbxBytes;
+        final RestoreSearch.Verifier verifier = db == null ? null : c -> verifyKdbx(db, c);
         exec.execute(() -> {
+            RestoreSearch.Result r;
             try {
-                List<Kck.Candidate> matched = new ArrayList<>();
-                long tried = 0; double total = 0;
-                long dataB = 0, checkB = 0; String lookalike = null; boolean fixed = false;
-                long t0 = System.currentTimeMillis();
-                Kck.Decoded d0 = Kck.decodeAny(poolData.pool, text, opts, cancelDecode::get);
-                tried += d0.tried; total += d0.total;
-                dataB = d0.dataBits; checkB = d0.checkBits; lookalike = d0.lookalike; fixed = d0.fixed;
-                List<Kck.Candidate> pool = new ArrayList<>(d0.candidates);
-                if (db != null) filterByKdbx(db, pool, matched, prog, t0);
-                else matched.addAll(pool);
-                if (matched.isEmpty() && depth > 0 && !cancelDecode.get()) {
-                    for (int dep = 1; dep <= depth && matched.isEmpty() && !cancelDecode.get(); dep++) {
-                        List<String> variants = ColorMismatch.variants(text, dep, ColorMismatch.MAX_VARIANTS);
-                        int vi = 0;
-                        for (String v : variants) {
-                            if (cancelDecode.get()) break;
-                            vi++;
-                            int viF = vi, depF = dep, nVar = variants.size();
-                            main.post(() -> prog.setText(getString(R.string.restore_mismatch_progress,
-                                    depF, viF, nVar, matched.size())));
-                            try {
-                                Kck.Decoded d = Kck.decodeAny(poolData.pool, v, opts, cancelDecode::get);
-                                tried += d.tried; total += d.total;
-                                List<Kck.Candidate> batch = new ArrayList<>(d.candidates);
-                                if (db != null) {
-                                    filterByKdbx(db, batch, matched, prog, t0);
-                                    if (!matched.isEmpty()) break;
-                                } else {
-                                    for (Kck.Candidate c : batch) {
-                                        boolean dup = false;
-                                        for (Kck.Candidate e : matched)
-                                            if (e.hex.equals(c.hex)) { dup = true; break; }
-                                        if (!dup) matched.add(c);
-                                    }
-                                    if (!matched.isEmpty()) break;
-                                }
-                            } catch (Kck.KckException ex) {
-                                if ("cancelled".equals(ex.getMessage())) break;
-                            }
-                        }
-                    }
-                }
-                Kck.Decoded out = new Kck.Decoded(matched, tried, total, dataB, checkB, lookalike, fixed);
-                final String noteFinal = (db != null && matched.isEmpty())
-                        ? getString(R.string.restore_kdbx_none) : null;
-                main.post(() -> showCandidates(out, noteFinal));
+                long[] lastPost = {0};
+                r = RestoreSearch.run(poolData.pool, text, opts, depth, verifier, cancelDecode::get,
+                        (dep, vi, nv, verified, matched) -> {
+                            long now = System.currentTimeMillis();
+                            if (now - lastPost[0] < 150 && vi < nv) return;
+                            lastPost[0] = now;
+                            main.post(() -> prog.setText(dep == 0
+                                    ? getString(R.string.restore_progress_exact, verified, matched)
+                                    : getString(R.string.restore_mismatch_progress, dep, vi, nv, verified, matched)));
+                        });
             } catch (Exception e) {
-                main.post(() -> status.setText(e.getMessage() != null ? e.getMessage() : e.toString()));
+                String msg = e.getMessage() != null ? e.getMessage() : e.toString();
+                main.post(() -> showError(msg));
+                return;
             }
+            final RestoreSearch.Result fr = r;
+            main.post(() -> onPassDone(text, fr));
         });
     }
 
-    private void filterByKdbx(byte[] db, List<Kck.Candidate> batch, List<Kck.Candidate> matched,
-                              TextView prog, long t0) {
-        int i = 0;
-        for (Kck.Candidate c : batch) {
-            if (cancelDecode.get()) break;
-            i++;
-            if (c.bits.length < 256) continue;
-            byte[] keyBits = Arrays.copyOf(c.bits, 256);
-            byte[] composite = Kck.bitsToBytes(keyBits);
-            try {
-                KeePassFacade.openBytes(db, KeePassFacade.credentialsFromComposite(composite));
-                matched.add(c);
-            } catch (Exception ignored) {
-            } finally {
-                Arrays.fill(composite, (byte) 0);
-                Arrays.fill(keyBits, (byte) 0);
-            }
-            int done = i;
-            long elapsed = System.currentTimeMillis() - t0;
-            main.post(() -> prog.setText(getString(R.string.restore_kdbx_progress,
-                    done, batch.size(), matched.size(), elapsed / 1000.0)));
-            if (!matched.isEmpty()) break;
+    private void showError(String msg) {
+        resultsBox.removeAllViews();
+        addLine(lastText != null ? lastText : "", R.color.text, true);
+        addLine(lastNotes, R.color.dim, false);
+        String full = getString(R.string.restore_decode_failed, msg);
+        addLine(full, R.color.err, false);
+        status.setText(full);
+        Button backEdit = new Button(this);
+        backEdit.setAllCaps(false);
+        backEdit.setText(R.string.restore_back_edit);
+        backEdit.setOnClickListener(v -> showResults(false));
+        resultsBox.addView(backEdit);
+    }
+
+    private void onPassDone(String text, RestoreSearch.Result r) {
+        if (isFinishing() || isDestroyed()) return;
+        if (!r.matched.isEmpty() || r.cancelled) {
+            String note = r.depth > 0 && !r.matched.isEmpty()
+                    ? getString(R.string.restore_found_mismatch, r.depth) : null;
+            showCandidates(r.toDecoded(), note);
+            return;
+        }
+        if (r.depth == 0) {
+            startPass(text, 1, getString(R.string.restore_auto_mismatch1));
+            return;
+        }
+        if (r.depth == 1) {
+            lastDepth1 = r;
+            RestoreSearch.Estimate est = RestoreSearch.estimateDepth2(text, r, kdbxBytes != null);
+            if (est.variants == 0) { showCandidates(r.toDecoded(), kdbxBytes != null ? getString(R.string.restore_kdbx_none) : null); return; }
+            String msg = kdbxBytes != null
+                    ? getString(R.string.restore_ask_mismatch2_msg, est.variants, est.verifications,
+                            RestoreSearch.humanDuration(est.seconds))
+                    : getString(R.string.restore_ask_mismatch2_msg_nokdbx, est.variants,
+                            RestoreSearch.humanDuration(est.seconds));
+            if (est.variantsUncapped > est.variants)
+                msg = msg + "\n" + getString(R.string.restore_ask_cap, est.variantsUncapped, est.variants);
+            showCandidates(r.toDecoded(), kdbxBytes != null ? getString(R.string.restore_kdbx_none) : null);
+            askDialog = new AlertDialog.Builder(this)
+                    .setTitle(R.string.restore_ask_mismatch2_title)
+                    .setMessage(msg)
+                    .setPositiveButton(R.string.restore_try2, (d, w) -> startPass(text, 2, null))
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .create();
+            askDialog.show();
+            return;
+        }
+        showCandidates(r.toDecoded(), kdbxBytes != null ? getString(R.string.restore_kdbx_none) : null);
+    }
+
+    AlertDialog shownDialogForTest() { return askDialog; }
+    List<BlockHolder> blocksForTest() { return blocks; }
+
+    private static boolean verifyKdbx(byte[] db, Kck.Candidate c) {
+        if (c.bits.length < 256) return false;
+        byte[] keyBits = Arrays.copyOf(c.bits, 256);
+        byte[] composite = Kck.bitsToBytes(keyBits);
+        try {
+            KeePassFacade.openBytes(db, KeePassFacade.credentialsFromComposite(composite));
+            return true;
+        } catch (Exception ignored) {
+            return false;
+        } finally {
+            Arrays.fill(composite, (byte) 0);
+            Arrays.fill(keyBits, (byte) 0);
         }
     }
 
     private void showCandidates(Kck.Decoded d, String note) {
         resultsBox.removeAllViews();
         status.setText(note != null ? note : WebModel.decodeSummary(d));
+        if (lastText != null) addLine(lastText, R.color.dim, true);
         int n = Math.min(50, d.candidates.size());
         for (int i = 0; i < n; i++) {
             Kck.Candidate c = d.candidates.get(i);
