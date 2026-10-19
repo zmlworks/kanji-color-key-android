@@ -1,6 +1,7 @@
 package com.zmlworks.kanjicolorkey;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.res.Configuration;
@@ -59,6 +60,8 @@ import java.util.concurrent.Executors;
  * Kck (the Java port of src/kck.js). Light/dark: follows the system, or the theme chosen in the settings.
  */
 public class MainActivity extends Activity {
+    /** Hex 256-bit key from KeePass emergency-key flow. */
+    public static final String EXTRA_KEY_HEX = "key_hex";
     private final Handler main = new Handler(Looper.getMainLooper());
     private ExecutorService exec;
     private Settings settings;
@@ -183,6 +186,7 @@ public class MainActivity extends Activity {
         if (c != null && (c.key != null || c.custom != null)) { key = c.key; custom = c.custom; types = c.types; }
         else key = Kck.randomBits(512);
         render();
+        applyIncomingKeyHex(getIntent());
     }
 
     @Override protected void onSaveInstanceState(Bundle out) {
@@ -338,6 +342,7 @@ public class MainActivity extends Activity {
         tFixed.setOnCheckedChangeListener((b, on) -> { if (!suppress) render(); });
         bDec.setOnClickListener(v -> decode(false));
         findViewById(R.id.bDemo).setOnClickListener(v -> demo());
+        findViewById(R.id.bKeepass).setOnClickListener(v -> startActivity(new Intent(this, KeePassActivity.class)));
         findViewById(R.id.bSettings).setOnClickListener(v -> showSettings());
         findViewById(R.id.bLicenses).setOnClickListener(v -> showLicenses());
         explainToggle.setOnClickListener(v -> {
@@ -646,6 +651,29 @@ public class MainActivity extends Activity {
             row.addView(small);
             row.addView(copyButton(R.string.copy_hex, "key", c.hex));
             decOut.addView(row);
+        }
+    }
+
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        applyIncomingKeyHex(intent);
+    }
+
+    /** Accept a 256-bit key as hex (from KeePass emergency key) and show encoding. */
+    private void applyIncomingKeyHex(Intent intent) {
+        if (intent == null) return;
+        String hex = intent.getStringExtra(EXTRA_KEY_HEX);
+        if (hex == null || hex.isEmpty()) return;
+        intent.removeExtra(EXTRA_KEY_HEX);
+        if (pool == null) return;
+        try {
+            useBits(Kck.hexToBits(hex));
+            Toast.makeText(this, R.string.kp_ok_emergency, Toast.LENGTH_SHORT).show();
+        } catch (Kck.KckException e) {
+            err.setText(e.getMessage());
         }
     }
 

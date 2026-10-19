@@ -9,3 +9,6 @@ keystore.properties
 *.iml
 .secrets
 *.secret
+
+# Local KeePass test DBs (never commit secrets / user test files)
+app/src/test/resources/kdbx-fixtures/

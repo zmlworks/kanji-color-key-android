@@ -4,7 +4,7 @@
 
 256 bit の鍵（パスワードマネージャーなどの「最後の鍵」）を、一画ごとに 黒・赤・青・緑 の色がついた**約8文字の漢字**（または英数字・かなとの組み合わせ）に直して、紙に手で書き写せるようにする Android アプリです。
 オフライン Web アプリ [kanji-color-key](https://github.com/zmlworks/kanji-color-key)（[Web版](https://zmlworks.github.io/kanji-color-key/)、方式 **v1.2.0**）の Android 版で、同じ鍵から同じ文字列になります。
-権限は一切なし（インターネット権限なし）・解析ツールなし・外部ライブラリなし。
+権限は一切なし（インターネット権限なし）・解析ツールなし。0.3.0 から KeePass（kotpass, MIT）を同梱。
 
 > **このリポジトリについて / About this repository**
 > このリポジトリは、AIアシスタントGrok Botが、人間の管理者のもとで自律的に運用しているアカウント（zmlworks）が作成・管理しています。
@@ -20,7 +20,7 @@ kanji → alpha → kana, switch alphanumerics and kana on or off, all-kana (var
 `KF(` form: 24 kana for 256 bits), three endings, a hiragana/katakana lookalike retry, check bits, random (SecureRandom) /
 hex / binary / passphrase (PBKDF2-SHA256, 600,000 rounds) keys, a demo and dark mode. The encoder and decoder are a
 native Java port checked against the JavaScript with shared vectors (thousands of random keys in every mode, v1.0 and
-v1.1 outputs, error messages). No permissions, no storage of keys, no backup, sensitive clipboard; screenshot blocking,
+v1.1 outputs, error messages). No permissions, no storage of keys, no backup; KeePass emergency-key helper (kotpass, MIT) from 0.3.0; sensitive clipboard; screenshot blocking,
 clearing in the background, keep-screen-on and clipboard auto-clear are opt-in settings. Japanese UI. MIT © zmlworks;
 kanji and kana stroke data KanjiVG (CC BY-SA 3.0).
 
@@ -30,8 +30,12 @@ kanji and kana stroke data KanjiVG (CC BY-SA 3.0).
 
 （画面はテスト用に JVM 上で描画したもの (Robolectric)。実機での確認はまだです。）
 
+
+## KeePass 緊急鍵（0.3.0）
+右上の「KeePass」から、既存の `.kdbx` を開いてマスターパスワード（＋任意のキーファイル）を検証し、KeePass の合成鍵（256 bit・KDF 前）を漢字色キーで紙に書き残せます。同じ緊急鍵だけで後から `.kdbx` を開けます（ヘッダの KDF は実行します）。新規作成は KDBX 4・Argon2id・AES-256 または ChaCha20。Twofish の DB は読み取り専用。テスト用の `.kdbx` はリポジトリに含めません。
+
 ## 入手
-[Releases](https://github.com/zmlworks/kanji-color-key-android/releases) の `kanji-color-key-0.2.0.apk` をインストールしてください（Android 8.0 以上）。
+[Releases](https://github.com/zmlworks/kanji-color-key-android/releases) の `kanji-color-key-0.3.0.apk` をインストールしてください（Android 8.0 以上）。
 署名証明書 SHA-256: `2E:F7:FF:51:8A:B0:76:54:47:F4:D2:BD:9C:C4:8C:E6:02:1F:EC:08:FD:47:6F:1F:7D:AB:6F:BB:98:08:68:DE`
 （F-Droid への登録は準備中です。）
 

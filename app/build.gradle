@@ -1,4 +1,7 @@
-plugins { id 'com.android.application' }
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
 
 // Release signing: the keystore lives OUTSIDE the repo and is optional.
 // Path of a properties file (storeFile/storePassword/keyAlias/keyPassword):
@@ -16,8 +19,8 @@ android {
         applicationId 'com.zmlworks.kanjicolorkey'
         minSdk 26
         targetSdk 35
-        versionCode 2
-        versionName '0.2.0'
+        versionCode 3
+        versionName '0.3.0'
         resourceConfigurations += ['en', 'ja']
     }
     signingConfigs {
@@ -47,6 +50,7 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+    kotlinOptions { jvmTarget = '17' }
     buildFeatures { buildConfig false }
     lint {
         abortOnError true
@@ -63,7 +67,8 @@ android {
 }
 
 dependencies {
-    // The app itself has NO dependencies (framework only). Test-only:
+    implementation project(':kotpass')
+    // Test-only:
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.robolectric:robolectric:4.14.1'
 }

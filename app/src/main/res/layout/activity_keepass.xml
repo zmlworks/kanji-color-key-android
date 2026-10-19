@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="?android:attr/colorBackground">
+    <LinearLayout
+        android:id="@+id/root"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="horizontal" android:gravity="center_vertical">
+            <Button android:id="@+id/bBack" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="@string/kp_back" android:textAllCaps="false" />
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:text="@string/kp_title" android:textSize="18sp" android:textStyle="bold"
+                android:paddingStart="8dp" android:textColor="@color/text" />
+        </LinearLayout>
+
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="@string/kp_intro" android:textSize="13sp" android:textColor="@color/dim"
+            android:paddingTop="4dp" android:paddingBottom="8dp" />
+
+        <HorizontalScrollView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:scrollbars="none">
+            <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <Button android:id="@+id/tabEmergency" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="@string/kp_tab_emergency" android:textAllCaps="false" />
+                <Button android:id="@+id/tabOpen" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="@string/kp_tab_open" android:textAllCaps="false" />
+                <Button android:id="@+id/tabCreate" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="@string/kp_tab_create" android:textAllCaps="false" />
+                <Button android:id="@+id/tabBrowse" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="@string/kp_tab_browse" android:textAllCaps="false" android:enabled="false" />
+            </LinearLayout>
+        </HorizontalScrollView>
+
+        <TextView android:id="@+id/status" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:textColor="@color/dim" android:textSize="13sp" android:paddingTop="6dp" android:paddingBottom="6dp" />
+
+        <!-- Emergency key panel -->
+        <LinearLayout android:id="@+id/panelEmergency" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical" android:background="@drawable/section_bg" android:padding="10dp">
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:text="@string/kp_emergency_help" android:textColor="@color/text" android:textSize="13sp" />
+            <Button android:id="@+id/bPickDbEm" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="@string/kp_pick_kdbx" android:textAllCaps="false" />
+            <TextView android:id="@+id/dbNameEm" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:textColor="@color/dim" android:textSize="12sp" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:text="@string/kp_password" android:textColor="@color/text" android:paddingTop="6dp" />
+            <EditText android:id="@+id/passwordEm" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:inputType="textPassword" android:importantForAutofill="no"
+                android:privateImeOptions="disableToolbar=true"
+                android:imeOptions="flagNoPersonalizedLearning" android:saveEnabled="false" />
+            <Button android:id="@+id/bPickKeyEm" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="@string/kp_pick_keyfile" android:textAllCaps="false" />
+            <TextView android:id="@+id/keyNameEm" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:textColor="@color/dim" android:textSize="12sp" />
+            <Button android:id="@+id/bMakeEm" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="@string/kp_make_emergency" android:textAllCaps="false" />
+            <Button android:id="@+id/bShowKanji" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="@string/kp_show_as_kanji" android:textAllCaps="false" android:enabled="false" />
+        </LinearLayout>
+
+        <!-- Open panel -->
+        <LinearLayout android:id="@+id/panelOpen" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical" android:background="@drawable/section_bg" android:padding="10dp"
+            android:visibility="gone">
+            <Button android:id="@+id/bPickDbOpen" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="@string/kp_pick_kdbx" android:textAllCaps="false" />
+            <TextView android:id="@+id/dbNameOpen" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:textColor="@color/dim" android:textSize="12sp" />
+            <RadioGroup android:id="@+id/openMode" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical">
+                <RadioButton android:id="@+id/modePassword" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="@string/kp_open_with_password" android:checked="true" />
+                <RadioButton android:id="@+id/modeComposite" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="@string/kp_open_with_emergency" />
+            </RadioGroup>
+            <EditText android:id="@+id/passwordOpen" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:inputType="textPassword" android:hint="@string/kp_password"
+                android:importantForAutofill="no" android:saveEnabled="false"
+                android:imeOptions="flagNoPersonalizedLearning" />
+            <Button android:id="@+id/bPickKeyOpen" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="@string/kp_pick_keyfile" android:textAllCaps="false" />
+            <TextView android:id="@+id/keyNameOpen" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:textColor="@color/dim" android:textSize="12sp" />
+            <EditText android:id="@+id/compositeHex" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:hint="@string/kp_composite_hex_hint" android:inputType="textVisiblePassword"
+                android:fontFamily="monospace" android:textSize="12sp"
+                android:importantForAutofill="no" android:saveEnabled="false" android:visibility="gone" />
+            <EditText android:id="@+id/compositeEncoded" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:hint="@string/kp_composite_encoded_hint" android:inputType="textMultiLine"
+                android:importantForAutofill="no" android:saveEnabled="false" android:visibility="gone" />
+            <Button android:id="@+id/bOpen" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="@string/kp_open" android:textAllCaps="false" />
+        </LinearLayout>
+
+        <!-- Create panel -->
+        <LinearLayout android:id="@+id/panelCreate" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical" android:background="@drawable/section_bg" android:padding="10dp"
+            android:visibility="gone">
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:text="@string/kp_create_help" android:textColor="@color/text" android:textSize="13sp" />
+            <EditText android:id="@+id/createName" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:hint="@string/kp_db_name" android:importantForAutofill="no" android:saveEnabled="false" />
+            <EditText android:id="@+id/passwordCreate" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:inputType="textPassword" android:hint="@string/kp_password"
+                android:importantForAutofill="no" android:saveEnabled="false"
+                android:imeOptions="flagNoPersonalizedLearning" />
+            <Button android:id="@+id/bPickKeyCreate" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="@string/kp_pick_keyfile" android:textAllCaps="false" />
+            <TextView android:id="@+id/keyNameCreate" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:textColor="@color/dim" android:textSize="12sp" />
+            <RadioGroup android:id="@+id/cipherChoice" android:layout_width="match_parent" android:layout_height="wrap_content">
+                <RadioButton android:id="@+id/cipherAes" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="@string/kp_cipher_aes" android:checked="true" />
+                <RadioButton android:id="@+id/cipherChaCha" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="@string/kp_cipher_chacha" />
+            </RadioGroup>
+            <Button android:id="@+id/bCreate" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="@string/kp_create_save" android:textAllCaps="false" />
+        </LinearLayout>
+
+        <!-- Browse panel -->
+        <LinearLayout android:id="@+id/panelBrowse" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical" android:background="@drawable/section_bg" android:padding="10dp"
+            android:visibility="gone">
+            <TextView android:id="@+id/browseInfo" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:textColor="@color/text" android:textSize="13sp" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <Button android:id="@+id/bAddEntry" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="@string/kp_add_entry" android:textAllCaps="false" />
+                <Button android:id="@+id/bSaveDb" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="@string/kp_save" android:textAllCaps="false" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/entryList" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" />
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

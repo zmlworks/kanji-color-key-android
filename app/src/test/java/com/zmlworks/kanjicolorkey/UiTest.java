@@ -89,6 +89,12 @@ public class UiTest {
         }
     }
 
+
+    @Test public void keepassButtonOpensActivity() {
+        assertNotNull(v(R.id.bKeepass));
+        assertEquals(a.getString(R.string.keepass), ((android.widget.Button) v(R.id.bKeepass)).getText().toString());
+    }
+
     // ---------- security ----------
     @Test public void noPermissionsNoBackupSecureWindow() throws Exception {
         PackageInfo pi = a.getPackageManager().getPackageInfo(a.getPackageName(), PackageManager.GET_PERMISSIONS);

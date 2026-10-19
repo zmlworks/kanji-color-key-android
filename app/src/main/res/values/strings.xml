@@ -130,4 +130,57 @@
 <li>デコード画面に書き順の見本を出して、色を照らし合わせやすくする予定です。</li>
 <li>プールは漢検準1級の範囲の近似（JISの区分による）で、正式な字表ではありません。</li>
 </ul>]]></string>
+
+    <!-- KeePass / emergency key (0.3.0) -->
+    <string name="keepass">KeePass</string>
+    <string name="kp_title">KeePass 緊急鍵</string>
+    <string name="kp_back">戻る</string>
+    <string name="kp_intro">マスターパスワードから KeePass の合成鍵（256 bit）を作り、漢字色キーで紙に書き残せます。緊急鍵だけで .kdbx を開けます（KDF はファイル側の設定を使います）。完全オフライン。</string>
+    <string name="kp_tab_emergency">緊急鍵を作る</string>
+    <string name="kp_tab_open">開く</string>
+    <string name="kp_tab_create">新規作成</string>
+    <string name="kp_tab_browse">エントリ</string>
+    <string name="kp_emergency_help">.kdbx を選び、マスターパスワード（と任意のキーファイル）を入力します。開けることを確認してから 256 bit 合成鍵を漢字表示に渡します。</string>
+    <string name="kp_pick_kdbx">.kdbx を選ぶ</string>
+    <string name="kp_pick_keyfile">キーファイルを選ぶ（任意）</string>
+    <string name="kp_password">マスターパスワード</string>
+    <string name="kp_make_emergency">検証して緊急鍵を作る</string>
+    <string name="kp_show_as_kanji">漢字色キーで表示</string>
+    <string name="kp_open_with_password">パスワード（＋キーファイル）で開く</string>
+    <string name="kp_open_with_emergency">緊急鍵（合成鍵）で開く</string>
+    <string name="kp_composite_hex_hint">合成鍵 64桁16進</string>
+    <string name="kp_composite_encoded_hint">または漢字色キーの文字列 M(…)</string>
+    <string name="kp_open">データベースを開く</string>
+    <string name="kp_create_help">KDBX 4・Argon2id（既定 64MiB / 3回 / 並列2）。AES-256 または ChaCha20。保存後に緊急鍵を表示できます。</string>
+    <string name="kp_db_name">データベース名</string>
+    <string name="kp_cipher_aes">AES-256</string>
+    <string name="kp_cipher_chacha">ChaCha20</string>
+    <string name="kp_create_save">作成して保存</string>
+    <string name="kp_add_entry">エントリ追加</string>
+    <string name="kp_save">上書き保存</string>
+    <string name="kp_reveal">表示</string>
+    <string name="kp_hide">隠す</string>
+    <string name="kp_copy_password">パスワードをコピー</string>
+    <string name="kp_edit">編集</string>
+    <string name="kp_delete">削除</string>
+    <string name="kp_working">処理中…</string>
+    <string name="kp_ok_emergency">緊急鍵を作成しました。検証済みです。</string>
+    <string name="kp_ok_opened">開きました: %1$s / %2$s（%3$d エントリ）</string>
+    <string name="kp_ok_saved">保存しました（再オープン検証済み）</string>
+    <string name="kp_ok_created">作成しました</string>
+    <string name="kp_readonly_twofish">Twofish データベースは読み取り専用です（プラグイン暗号のため書き戻しません）。</string>
+    <string name="kp_err_no_db">先に .kdbx を選んでください</string>
+    <string name="kp_err_open">開けませんでした（パスワードや鍵を確認）: %1$s</string>
+    <string name="kp_err_generic">エラー: %1$s</string>
+    <string name="kp_entry_title">タイトル</string>
+    <string name="kp_entry_user">ユーザー名</string>
+    <string name="kp_entry_pass">パスワード</string>
+    <string name="kp_entry_url">URL</string>
+    <string name="kp_entry_notes">メモ</string>
+    <string name="kp_confirm_delete">このエントリを削除しますか？</string>
+    <string name="kp_no_entries">エントリはありません</string>
+    <string name="kp_file_none">（未選択）</string>
+    <string name="kp_offer_emergency">今すぐ緊急鍵を漢字で表示しますか？</string>
+    <string name="kp_yes">はい</string>
+    <string name="kp_no">いいえ</string>
 </resources>

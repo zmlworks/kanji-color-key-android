@@ -28,3 +28,8 @@ Icon artwork supplied by the project owner.
 ------------------
 The encoding (kanji pool and kana order, colors, check code and surplus bits) is that of
 kanji-color-key v1.2.0 by zmlworks (MIT), ported from JavaScript to Java.
+
+----
+kotpass (MIT) — KeePass KDBX library, vendored with Credentials.fromComposite patch.
+okio (Apache-2.0) — I/O for kotpass.
+See THIRD_PARTY_NOTICES.md / kotpass/LICENSE-kotpass.txt in the source tree.

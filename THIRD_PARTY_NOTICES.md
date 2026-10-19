@@ -1,7 +1,13 @@
 # Third-party notices
 
-The app code is MIT licensed, © 2026 zmlworks ([LICENSE](LICENSE)). The app has **no third-party code libraries**
-(JUnit and Robolectric are used only by the tests and are not part of the APK). Fonts are the phone's system fonts;
+The app code is MIT licensed, © 2026 zmlworks ([LICENSE](LICENSE)).
+
+## kotpass (KeePass KDBX) — MIT
+
+From 0.3.0 the app vendors [kotpass](https://github.com/keemobile/kotpass) (MIT, © keemobile / Denis Trotsenko)
+under `kotpass/` with a small `Credentials.fromComposite` patch for opening a database with a raw KeePass
+composite key. It also depends on [okio](https://github.com/square/okio) (Apache-2.0). See
+`kotpass/LICENSE-kotpass.txt`. JUnit and Robolectric remain test-only. Fonts are the phone's system fonts;
 none are bundled.
 
 ## KanjiVG (kanji and kana stroke data) — CC BY-SA 3.0
