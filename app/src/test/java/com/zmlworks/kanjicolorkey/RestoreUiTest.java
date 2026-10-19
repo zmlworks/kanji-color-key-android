@@ -40,7 +40,8 @@ import java.util.List;
 @Config(sdk = 35, qualifiers = "ja-w411dp-h891dp-port-xxhdpi")
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 public class RestoreUiTest {
-    static final File OUT = new File("/workspace/android/out/screens-0.4.3");
+    static final File OUT = new File(System.getenv("KCK_SCREENS_DIR") != null
+            ? System.getenv("KCK_SCREENS_DIR") : "build/reports/screens-0.4.3");
     static final int W = 411 * 3, H = 891 * 3;
 
     @Before public void setUp() {
