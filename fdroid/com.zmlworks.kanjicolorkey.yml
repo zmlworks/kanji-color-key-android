@@ -44,10 +44,17 @@ Builds:
     gradle:
       - yes
 
+  - versionName: 0.4.1
+    versionCode: 5
+    commit: PLACEHOLDER
+    subdir: app
+    gradle:
+      - yes
+
 # reproducible build: F-Droid publishes the upstream-signed APK when its own build matches it
 AllowedAPKSigningKeys: 2ef7ff518ab0765447f4d2bd9cc48ce6021fec08fd476f1f7dab6fbb980868de
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
-CurrentVersion: 0.4.0
-CurrentVersionCode: 4
+CurrentVersion: 0.4.1
+CurrentVersionCode: 5

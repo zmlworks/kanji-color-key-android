@@ -134,10 +134,15 @@ public class KeePassActivity extends android.app.Activity {
         findViewById(R.id.bPickKeyOpen).setOnClickListener(v -> pick(REQ_KEY_OPEN, "*/*"));
         findViewById(R.id.bOpen).setOnClickListener(v -> openDb());
         findViewById(R.id.bRestorePaper).setOnClickListener(v -> {
+            byte[] src = dbBytesOpen != null ? dbBytesOpen : dbBytesEm;
+            Uri srcUri = dbUriOpen != null ? dbUriOpen : dbUriEm;
+            String srcName = dbBytesOpen != null
+                    ? (dbNameOpen.getText() != null ? dbNameOpen.getText().toString() : null)
+                    : (dbNameEm.getText() != null ? dbNameEm.getText().toString() : null);
+            if (src != null) KeePassHandoff.putKdbx(src, srcName, srcUri);
             Intent i = new Intent(this, RestoreActivity.class);
             i.putExtra(RestoreActivity.EXTRA_FROM_KEEPASS, true);
-            if (dbUriOpen != null) i.putExtra(RestoreActivity.EXTRA_KDBX_URI, dbUriOpen.toString());
-            else if (dbUriEm != null) i.putExtra(RestoreActivity.EXTRA_KDBX_URI, dbUriEm.toString());
+            if (srcUri != null) i.putExtra(RestoreActivity.EXTRA_KDBX_URI, srcUri.toString());
             startActivity(i);
         });
         openMode.setOnCheckedChangeListener((g, id) -> updateOpenModeUi());
@@ -149,11 +154,21 @@ public class KeePassActivity extends android.app.Activity {
         bSaveDb.setOnClickListener(v -> saveOpenDb());
 
         String prefill = getIntent().getStringExtra(EXTRA_COMPOSITE_HEX);
+        if (prefill == null || prefill.isEmpty()) prefill = KeePassHandoff.takeCompositeHex();
+        byte[] handed = KeePassHandoff.peekKdbxBytes();
+        if (handed != null && dbBytesOpen == null) {
+            dbBytesOpen = handed;
+            openUri = KeePassHandoff.kdbxUri();
+            dbUriOpen = openUri;
+            String nm = KeePassHandoff.kdbxName();
+            dbNameOpen.setText(nm != null ? nm : getString(R.string.kp_file_handoff));
+        }
         if (prefill != null && !prefill.isEmpty()) {
             showPanel(1);
             modeComposite.setChecked(true);
             compositeHex.setText(prefill);
             updateOpenModeUi();
+            status.setText(R.string.kp_handoff_ready);
         } else showPanel(0);
     }
 
@@ -185,6 +200,7 @@ public class KeePassActivity extends android.app.Activity {
         Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         i.addCategory(Intent.CATEGORY_OPENABLE);
         i.setType(mime);
+        i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
         startActivityForResult(i, req);
     }
 
@@ -202,10 +218,18 @@ public class KeePassActivity extends android.app.Activity {
         if (resultCode != RESULT_OK || data == null || data.getData() == null) return;
         Uri uri = data.getData();
         try {
+            try {
+                getContentResolver().takePersistableUriPermission(uri,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                | (data.getFlags() & Intent.FLAG_GRANT_WRITE_URI_PERMISSION));
+            } catch (SecurityException ignored) {
+                // Some providers only grant transient read; we still keep bytes in memory.
+            }
             switch (requestCode) {
                 case REQ_DB_EM:
                     dbUriEm = uri; dbBytesEm = readAll(uri);
                     dbNameEm.setText(displayName(uri));
+                    KeePassHandoff.putKdbx(dbBytesEm, dbNameEm.getText().toString(), uri);
                     break;
                 case REQ_KEY_EM:
                     keyBytesEm = readAll(uri); keyNameEm.setText(displayName(uri));
@@ -213,6 +237,7 @@ public class KeePassActivity extends android.app.Activity {
                 case REQ_DB_OPEN:
                     openUri = uri; dbUriOpen = uri; dbBytesOpen = readAll(uri);
                     dbNameOpen.setText(displayName(uri));
+                    KeePassHandoff.putKdbx(dbBytesOpen, dbNameOpen.getText().toString(), uri);
                     break;
                 case REQ_KEY_OPEN:
                     keyBytesOpen = readAll(uri); keyNameOpen.setText(displayName(uri));
@@ -273,6 +298,10 @@ public class KeePassActivity extends android.app.Activity {
                     wipe(lastEmergencyComposite);
                     lastEmergencyComposite = composite;
                     bShowKanji.setEnabled(true);
+                    if (dbBytesEm != null)
+                        KeePassHandoff.putKdbx(dbBytesEm,
+                                dbNameEm.getText() != null ? dbNameEm.getText().toString() : null, dbUriEm);
+                    KeePassHandoff.putCompositeHex(KeePassFacade.bytesToHex(composite));
                     status.setText(R.string.kp_ok_emergency);
                 });
 
@@ -287,8 +316,13 @@ public class KeePassActivity extends android.app.Activity {
 
     private void showAsKanji(byte[] composite) {
         if (composite == null || composite.length != 32) return;
+        String hex = KeePassFacade.bytesToHex(composite);
+        KeePassHandoff.putCompositeHex(hex);
+        if (dbBytesEm != null)
+            KeePassHandoff.putKdbx(dbBytesEm,
+                    dbNameEm.getText() != null ? dbNameEm.getText().toString() : null, dbUriEm);
         Intent i = new Intent(this, MainActivity.class);
-        i.putExtra(MainActivity.EXTRA_KEY_HEX, KeePassFacade.bytesToHex(composite));
+        i.putExtra(MainActivity.EXTRA_KEY_HEX, hex);
         i.putExtra(MainActivity.EXTRA_KEY_LOCKED, true);
         i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         startActivity(i);
@@ -327,10 +361,31 @@ public class KeePassActivity extends android.app.Activity {
             } catch (Exception e) {
                 main.post(() -> {
                     setBusy(false);
-                    status.setText(getString(R.string.kp_err_open, e.getMessage()));
+                    status.setText(formatOpenError(e));
                 });
             }
         });
+    }
+
+    private String formatOpenError(Exception e) {
+        if (e instanceof IllegalArgumentException && e.getMessage() != null
+                && (e.getMessage().startsWith("Need ") || e.getMessage().contains("decode")
+                || e.getMessage().contains("No decode") || e.getMessage().contains("candidates"))) {
+            return getString(R.string.kp_err_decode, e.getMessage());
+        }
+        KeePassFacade.ClassifiedError c = KeePassFacade.classifyOpenError(e);
+        switch (c.getKind()) {
+            case WRONG_KEY:
+                return getString(R.string.kp_err_wrong_key, c.getDetail());
+            case UNREADABLE:
+                return getString(R.string.kp_err_unreadable, c.getDetail());
+            case UNSUPPORTED:
+                return getString(R.string.kp_err_unsupported, c.getDetail());
+            case DECODE:
+                return getString(R.string.kp_err_decode, c.getDetail());
+            default:
+                return getString(R.string.kp_err_open, c.getDetail());
+        }
     }
 
     private byte[] decodeToKeyBytes(String text) throws Exception {

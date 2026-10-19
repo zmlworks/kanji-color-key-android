@@ -16,6 +16,7 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -48,6 +49,7 @@ public class RestoreActivity extends Activity {
     private View panelChars, panelStrokes, panelResults;
     private EditText charsIn, dataBits, checkBits;
     private CheckBox cbKf;
+    private RadioGroup mismatchDepth;
     private TextView charsErr, strokeProgress, strokeGuide, colorsSoFar, status, alphaHint;
     private FrameLayout sampleBox;
     private FlickColorView flick;
@@ -88,6 +90,7 @@ public class RestoreActivity extends Activity {
         dataBits = findViewById(R.id.dataBits);
         checkBits = findViewById(R.id.checkBits);
         cbKf = findViewById(R.id.cbKf);
+        mismatchDepth = findViewById(R.id.mismatchDepth);
         charsErr = findViewById(R.id.charsErr);
         strokeProgress = findViewById(R.id.strokeProgress);
         strokeGuide = findViewById(R.id.strokeGuide);
@@ -113,8 +116,18 @@ public class RestoreActivity extends Activity {
         flick.setListener(this::onFlickColor);
 
         fromKeepass = getIntent().getBooleanExtra(EXTRA_FROM_KEEPASS, false);
+        // Prefer in-memory handoff (survives missing SAF permission on this activity).
+        byte[] handed = KeePassHandoff.peekKdbxBytes();
+        if (handed != null) {
+            kdbxBytes = handed;
+            status.setText(R.string.restore_kdbx_loaded);
+        }
         String uri = getIntent().getStringExtra(EXTRA_KDBX_URI);
-        if (uri != null) loadKdbx(android.net.Uri.parse(uri));
+        if (kdbxBytes == null && uri != null) loadKdbx(android.net.Uri.parse(uri));
+        if (fromKeepass || kdbxBytes != null) {
+            // Match MainActivity emergency-key default check bits
+            if ("0".equals(checkBits.getText().toString().trim())) checkBits.setText("16");
+        }
 
         exec.execute(() -> {
             PoolData p = PoolStore.get(this);
@@ -304,6 +317,14 @@ public class RestoreActivity extends Activity {
         try { return Integer.parseInt(s.trim()); } catch (Exception e) { return def; }
     }
 
+    private int selectedMismatchDepth() {
+        if (mismatchDepth == null) return 0;
+        int id = mismatchDepth.getCheckedRadioButtonId();
+        if (id == R.id.mismatch1) return 1;
+        if (id == R.id.mismatch2) return 2;
+        return 0;
+    }
+
     private void finishColors() {
         showPanel(2);
         resultsBox.removeAllViews();
@@ -317,7 +338,6 @@ public class RestoreActivity extends Activity {
 
         int unknowns = 0;
         for (int[] col : colors) for (int c : col) if (c < 0) unknowns++;
-        // Cap: 4^8 = 65536 color expansions; beyond that decodeAny will refuse via EXPAND_LIMIT anyway.
         final int MAX_UNKNOWN = 8;
         long combos = 1;
         for (int i = 0; i < unknowns; i++) {
@@ -328,6 +348,14 @@ public class RestoreActivity extends Activity {
         info.setTextColor(getColor(R.color.dim));
         info.setText(getString(R.string.restore_combos, unknowns, combos));
         resultsBox.addView(info);
+        int depth = selectedMismatchDepth();
+        long mism = ColorMismatch.estimateVariantCount(text, depth);
+        if (depth > 0) {
+            TextView mi = new TextView(this);
+            mi.setTextColor(getColor(R.color.dim));
+            mi.setText(getString(R.string.restore_mismatch_estimate, mism, depth));
+            resultsBox.addView(mi);
+        }
         boolean tooMany = unknowns > MAX_UNKNOWN;
         if (tooMany) {
             TextView warn = new TextView(this);
@@ -340,7 +368,7 @@ public class RestoreActivity extends Activity {
         go.setAllCaps(false);
         go.setText(R.string.restore_decode);
         go.setEnabled(!tooMany);
-        go.setOnClickListener(v -> runDecode(text));
+        go.setOnClickListener(v -> runDecode(text, false));
         resultsBox.addView(go);
 
         if (kdbxBytes != null) {
@@ -348,7 +376,7 @@ public class RestoreActivity extends Activity {
             both.setAllCaps(false);
             both.setText(R.string.restore_decode_kdbx);
             both.setEnabled(!tooMany);
-            both.setOnClickListener(v -> runDecodeWithKdbx(text));
+            both.setOnClickListener(v -> runDecode(text, true));
             resultsBox.addView(both);
             TextView est = new TextView(this);
             est.setTextColor(getColor(R.color.dim));
@@ -358,31 +386,9 @@ public class RestoreActivity extends Activity {
         status.setText("");
     }
 
-    private void runDecode(String text) {
+    private void runDecode(String text, boolean withKdbx) {
         cancelDecode.set(false);
-        status.setText(R.string.decoding);
-        resultsBox.removeAllViews();
-        TextView wait = new TextView(this);
-        wait.setText(R.string.decoding);
-        wait.setTextColor(getColor(R.color.dim));
-        resultsBox.addView(wait);
-        final Kck.Options opts = new Kck.Options(kanaData.set);
-        exec.execute(() -> {
-            try {
-                Kck.Decoded d = Kck.decodeAny(poolData.pool, text, opts, cancelDecode::get);
-                main.post(() -> showCandidates(d, null));
-            } catch (Exception e) {
-                main.post(() -> {
-                    status.setText(e.getMessage());
-                    resultsBox.removeAllViews();
-                });
-            }
-        });
-    }
-
-    private void runDecodeWithKdbx(String text) {
-        cancelDecode.set(false);
-        status.setText(R.string.restore_kdbx_trying);
+        status.setText(withKdbx ? R.string.restore_kdbx_trying : R.string.decoding);
         resultsBox.removeAllViews();
         Button cancel = new Button(this);
         cancel.setAllCaps(false);
@@ -393,38 +399,102 @@ public class RestoreActivity extends Activity {
         prog.setTextColor(getColor(R.color.dim));
         resultsBox.addView(prog);
         final Kck.Options opts = new Kck.Options(kanaData.set);
-        final byte[] db = kdbxBytes;
+        final byte[] db = withKdbx ? kdbxBytes : null;
+        final int depth = selectedMismatchDepth();
         exec.execute(() -> {
             try {
-                Kck.Decoded d = Kck.decodeAny(poolData.pool, text, opts, cancelDecode::get);
-                List<Kck.Candidate> ok = new ArrayList<>();
-                int i = 0;
+                List<Kck.Candidate> matched = new ArrayList<>();
+                long tried = 0;
+                double total = 0;
+                long dataBits = 0, checkBits = 0;
+                String lookalike = null;
+                boolean fixed = false;
                 long t0 = System.currentTimeMillis();
-                for (Kck.Candidate c : d.candidates) {
-                    if (cancelDecode.get()) break;
-                    i++;
-                    byte[] bits = c.bits;
-                    if (bits.length < 256) continue;
-                    byte[] keyBits = Arrays.copyOf(bits, 256);
-                    byte[] composite = Kck.bitsToBytes(keyBits);
-                    try {
-                        KeePassFacade.openBytes(db, KeePassFacade.credentialsFromComposite(composite));
-                        ok.add(c);
-                    } catch (Exception ignored) {
-                    } finally {
-                        Arrays.fill(composite, (byte) 0);
-                        Arrays.fill(keyBits, (byte) 0);
-                    }
-                    int done = i;
-                    long elapsed = System.currentTimeMillis() - t0;
-                    main.post(() -> prog.setText(getString(R.string.restore_kdbx_progress, done, d.candidates.size(), ok.size(), elapsed / 1000.0)));
+
+                // 1) Exact (+ '?' expansion)
+                Kck.Decoded d0 = Kck.decodeAny(poolData.pool, text, opts, cancelDecode::get);
+                tried += d0.tried; total += d0.total;
+                dataBits = d0.dataBits; checkBits = d0.checkBits;
+                lookalike = d0.lookalike; fixed = d0.fixed;
+                List<Kck.Candidate> pool = new ArrayList<>(d0.candidates);
+
+                if (db != null) {
+                    filterByKdbx(db, pool, matched, prog, t0, cancelDecode);
+                } else {
+                    matched.addAll(pool);
                 }
-                Kck.Decoded filtered = new Kck.Decoded(ok, d.tried, d.total, d.dataBits, d.checkBits, d.lookalike, d.fixed);
-                main.post(() -> showCandidates(filtered, ok.isEmpty() ? getString(R.string.restore_kdbx_none) : null));
+
+                // 2) If nothing matched and user asked for mismatch tolerance, search depth 1..depth
+                if (matched.isEmpty() && depth > 0 && !cancelDecode.get()) {
+                    for (int dep = 1; dep <= depth && matched.isEmpty() && !cancelDecode.get(); dep++) {
+                        List<String> variants = ColorMismatch.variants(text, dep, ColorMismatch.MAX_VARIANTS);
+                        int vi = 0;
+                        for (String v : variants) {
+                            if (cancelDecode.get()) break;
+                            vi++;
+                            int viF = vi, depF = dep, nVar = variants.size();
+                            main.post(() -> prog.setText(getString(R.string.restore_mismatch_progress,
+                                    depF, viF, nVar, matched.size())));
+                            try {
+                                Kck.Decoded d = Kck.decodeAny(poolData.pool, v, opts, cancelDecode::get);
+                                tried += d.tried; total += d.total;
+                                List<Kck.Candidate> batch = new ArrayList<>(d.candidates);
+                                if (db != null) {
+                                    filterByKdbx(db, batch, matched, prog, t0, cancelDecode);
+                                    if (!matched.isEmpty()) break;
+                                } else {
+                                    for (Kck.Candidate c : batch) {
+                                        boolean dup = false;
+                                        for (Kck.Candidate e : matched) if (e.hex.equals(c.hex)) { dup = true; break; }
+                                        if (!dup) matched.add(c);
+                                    }
+                                    // Without kdbx, stop at first depth that yields any candidates
+                                    if (!matched.isEmpty()) break;
+                                }
+                            } catch (Kck.KckException ex) {
+                                if ("cancelled".equals(ex.getMessage())) break;
+                            }
+                        }
+                    }
+                }
+
+                Kck.Decoded out = new Kck.Decoded(matched, tried, total, dataBits, checkBits, lookalike, fixed);
+                final String noteFinal = (db != null && matched.isEmpty())
+                        ? getString(R.string.restore_kdbx_none) : null;
+                main.post(() -> showCandidates(out, noteFinal));
             } catch (Exception e) {
-                main.post(() -> status.setText(e.getMessage()));
+                main.post(() -> {
+                    status.setText(e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName());
+                    resultsBox.removeAllViews();
+                });
             }
         });
+    }
+
+    /** Try each candidate as composite key against db; append successes to matched. */
+    private void filterByKdbx(byte[] db, List<Kck.Candidate> batch, List<Kck.Candidate> matched,
+                              TextView prog, long t0, AtomicBoolean cancel) {
+        int i = 0;
+        for (Kck.Candidate c : batch) {
+            if (cancel.get()) break;
+            i++;
+            if (c.bits.length < 256) continue;
+            byte[] keyBits = Arrays.copyOf(c.bits, 256);
+            byte[] composite = Kck.bitsToBytes(keyBits);
+            try {
+                KeePassFacade.openBytes(db, KeePassFacade.credentialsFromComposite(composite));
+                matched.add(c);
+            } catch (Exception ignored) {
+            } finally {
+                Arrays.fill(composite, (byte) 0);
+                Arrays.fill(keyBits, (byte) 0);
+            }
+            int done = i;
+            long elapsed = System.currentTimeMillis() - t0;
+            main.post(() -> prog.setText(getString(R.string.restore_kdbx_progress,
+                    done, batch.size(), matched.size(), elapsed / 1000.0)));
+            if (!matched.isEmpty()) break; // first kdbx hit is enough for emergency open
+        }
     }
 
     private void showCandidates(Kck.Decoded d, String note) {
@@ -472,9 +542,12 @@ public class RestoreActivity extends Activity {
                 openKp.setAllCaps(false);
                 openKp.setText(R.string.restore_open_keepass);
                 openKp.setOnClickListener(v -> {
+                    String hx = c.hex.length() >= 64 ? c.hex.substring(0, 64) : c.hex;
+                    KeePassHandoff.putCompositeHex(hx);
+                    if (kdbxBytes != null)
+                        KeePassHandoff.putKdbx(kdbxBytes, KeePassHandoff.kdbxName(), KeePassHandoff.kdbxUri());
                     Intent intent = new Intent(this, KeePassActivity.class);
-                    intent.putExtra(KeePassActivity.EXTRA_COMPOSITE_HEX,
-                            c.hex.length() >= 64 ? c.hex.substring(0, 64) : c.hex);
+                    intent.putExtra(KeePassActivity.EXTRA_COMPOSITE_HEX, hx);
                     startActivity(intent);
                 });
                 btns.addView(openKp);

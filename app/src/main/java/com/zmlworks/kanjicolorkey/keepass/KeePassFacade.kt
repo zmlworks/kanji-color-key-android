@@ -344,4 +344,44 @@ object KeePassFacade {
             s.substring(i * 2, i * 2 + 2).toInt(16).toByte()
         }
     }
+
+    /** User-facing error category for open failures. */
+    enum class OpenErrorKind { WRONG_KEY, UNREADABLE, UNSUPPORTED, DECODE, OTHER }
+
+    data class ClassifiedError(val kind: OpenErrorKind, val detail: String)
+
+    @JvmStatic
+    fun classifyOpenError(t: Throwable): ClassifiedError {
+        var e: Throwable? = t
+        val parts = ArrayList<String>()
+        while (e != null) {
+            parts.add(e.javaClass.simpleName + ": " + (e.message ?: ""))
+            when (e) {
+                is app.keemobile.kotpass.errors.FormatError.UnknownFormat,
+                is app.keemobile.kotpass.errors.FormatError.UnsupportedVersion,
+                is app.keemobile.kotpass.errors.FormatError.InvalidHeader ->
+                    return ClassifiedError(OpenErrorKind.UNSUPPORTED, e.message ?: e.javaClass.simpleName)
+                is app.keemobile.kotpass.errors.FormatError.InvalidContent ->
+                    // HMAC / header integrity failure after KDF → wrong credentials
+                    return ClassifiedError(OpenErrorKind.WRONG_KEY, e.message ?: "Integrity check failed")
+                is SecurityException, is java.io.FileNotFoundException ->
+                    return ClassifiedError(OpenErrorKind.UNREADABLE, e.message ?: e.javaClass.simpleName)
+                is java.nio.file.AccessDeniedException ->
+                    return ClassifiedError(OpenErrorKind.UNREADABLE, e.message ?: "Access denied")
+            }
+            val msg = (e.message ?: "").lowercase()
+            if (msg.contains("hmac") || msg.contains("mac") || msg.contains("integrity")
+                || msg.contains("wrong") || msg.contains("invalid credentials")
+                || msg.contains("hash mismatch") || msg.contains("padded") && msg.contains("cipher"))
+                return ClassifiedError(OpenErrorKind.WRONG_KEY, e.message ?: e.javaClass.simpleName)
+            if (msg.contains("permission") || msg.contains("eacces") || msg.contains("no such file")
+                || msg.contains("cannot open") || msg.contains("permission denied"))
+                return ClassifiedError(OpenErrorKind.UNREADABLE, e.message ?: e.javaClass.simpleName)
+            if (msg.contains("unsupported") || msg.contains("unknown format") || msg.contains("version"))
+                return ClassifiedError(OpenErrorKind.UNSUPPORTED, e.message ?: e.javaClass.simpleName)
+            e = e.cause
+        }
+        return ClassifiedError(OpenErrorKind.OTHER, parts.joinToString(" | "))
+    }
+
 }

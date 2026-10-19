@@ -37,6 +37,20 @@
             <EditText android:id="@+id/checkBits" android:layout_width="60dp" android:layout_height="wrap_content"
                 android:inputType="number" android:text="0" android:saveEnabled="false" />
         </LinearLayout>
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="@string/restore_check_hint" android:textColor="@color/dim" android:textSize="12sp"
+            android:paddingBottom="4dp" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="@string/restore_mismatch" android:textColor="@color/text" />
+        <RadioGroup android:id="@+id/mismatchDepth" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:orientation="horizontal">
+            <RadioButton android:id="@+id/mismatch0" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="@string/restore_mismatch_0" android:checked="true" />
+            <RadioButton android:id="@+id/mismatch1" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="@string/restore_mismatch_1" />
+            <RadioButton android:id="@+id/mismatch2" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="@string/restore_mismatch_2" />
+        </RadioGroup>
         <Button android:id="@+id/bStartStrokes" android:layout_width="wrap_content" android:layout_height="wrap_content"
             android:text="@string/restore_start" android:textAllCaps="false" />
         <TextView android:id="@+id/charsErr" android:layout_width="match_parent" android:layout_height="wrap_content"

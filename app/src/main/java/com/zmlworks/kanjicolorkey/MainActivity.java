@@ -685,6 +685,8 @@ public class MainActivity extends Activity {
         try {
             useBits(Kck.hexToBits(hex));
             keyLocked = locked;
+            // Emergency keys: default 16-bit check so a paper restore can prune before slow KDF.
+            if (locked && checkBits() == 0) setCheck(16);
             applyKeyLockedUi();
             Toast.makeText(this, R.string.kp_ok_emergency, Toast.LENGTH_SHORT).show();
         } catch (Kck.KckException e) {

@@ -1,0 +1,1 @@
+Fix emergency-key open after paper restore: in-memory .kdbx handoff (no SAF URI permission loss), clearer errors (wrong key / unreadable / unsupported / decode), auto 16-bit check on KeePass keys. Color mismatch search (1–2 stroke flips) when decode/open fails without '?'.
